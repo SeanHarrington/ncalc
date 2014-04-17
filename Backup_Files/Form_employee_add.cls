@@ -59,16 +59,16 @@ End If
         'intCount = CLng(Nz(DLookup("ID", "employees", "first_name = '" & first_name & "' and last_name = '" & last_name & "' and middle_initial = '" & middle_name & "'"), 0))
         intCount = CLng(Nz(DLookup("ID", "employees", "ID = " & emp_id), 0))
     End If
+    
 If intCount > 0 Then ' Update employee
     
     Dim lookupAttrs As Variant: lookupAttrs = Array("first_name ='" & first_name & "',last_name = '" & last_name & "', middle_initial = '" & middle_name & "'")
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("employees"), "WHERE ID = " & emp_id)
-    MsgBox (query)
     CurrentDb.Execute query, dbFailOnError
-    
+    Set lookupAttrs = Nothing ' Clear it out
 Else ' Submit/Create new employee
 
-Set lookupAttrs = Nothing ' Clear it out
+
 
 
 'SELECT [employees].[ID], [employees].[last_name] + ",  " + [employees].[first_name] + " " + [employees].[middle_initial] FROM employees ORDER BY [last_name], [first_name], [middle_initial];
@@ -101,6 +101,10 @@ ErrorHandler:
     
 End Sub
 
+
+Private Sub Command18_Click()
+
+End Sub
 
 Private Sub Create_Update_Click()
   
