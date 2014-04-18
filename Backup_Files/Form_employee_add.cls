@@ -31,7 +31,7 @@ Dim fillColTab As String
 Dim intCount As Integer: intCount = 0 ' Initialized to zero
 
 
-If IsNull(Me.emp_add_text_first) = False Then
+If IsNull(Me.emp_add_text_first) = False And Len(emp_add_text_first.Value) Then
     first_name = Me.emp_add_text_first.Value
 Else
     'Call validation.Instance.Highlight(Me.emp_add_text_first)
@@ -39,7 +39,7 @@ Else
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
-If IsNull(Me.emp_add_text_last) = False Then
+If IsNull(Me.emp_add_text_last) = False And Len(emp_add_text_last.Value) Then
     last_name = Me.emp_add_text_last.Value
 Else
 
@@ -113,19 +113,14 @@ Private Sub Create_Update_Click()
 End Sub
 
 Private Sub e_cb_name_select_AfterUpdate()
+    
 
 
 End Sub
 
 Private Sub e_cb_name_select_BeforeUpdate(Cancel As Integer)
 
-
-End Sub
-
-Private Sub e_cb_name_select_Change()
-On Error GoTo ErrorHandler
-
-If e_cb_name_select And IsNull(e_cb_name_select.Column(0)) = True Then
+If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = True Then ' If ID doesn't exist then we have an invalid employee
     Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
 End If
 
@@ -147,6 +142,28 @@ End If
 
 Set rst = Nothing ' Clear it out
 Set textboxAttrs = Nothing ' Clear it out
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            ' Silently catch an exit without an error
+        Case Else ' All other cases
+            MsgBox ("Error Received: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+End Sub
+
+Private Sub e_cb_name_select_Change()
+On Error GoTo ErrorHandler
+
+
+If (Me.e_cb_name_select) And Me.e_cb_name_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
+    Call helpers.clear_form(Me)
+    Call helpers.change_control_caption("Create", Me.Create_Update) ' Reset
+    Resume ExitHandler ' Silently exit
+End If
+
 ExitHandler:
     Exit Sub
 ErrorHandler:

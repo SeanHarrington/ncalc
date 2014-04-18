@@ -19,6 +19,18 @@ End Sub
 
 
 Private Sub c_cb_name_select_BeforeUpdate(Cancel As Integer)
+On Error GoTo ErrorHandler ' Error handling
+
+If (Me.c_cb_name_select) And Me.c_cb_name_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
+    Call helpers.clear_form(Me)
+    Call helpers.change_control_caption("Create", Me.Create_Update) ' Reset
+    Resume ExitHandler ' Silently exit
+End If
+
+If Me.c_cb_name_select And IsNull(Me.c_cb_name_select.Column(0)) = True Then
+    Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
+End If
+
 Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial") ' Dictates the order in which the values will be placed into the textboxes
 Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("clients"), "WHERE ID = " & client_id)
@@ -39,25 +51,56 @@ End If
 Set rst = Nothing ' Clear it out
 Set textboxAttrs = Nothing ' Clear it out
 
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            ' Silently catch an exit without an error
+        Case Else ' All other cases
+            MsgBox ("Client Add Error Received: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+
+
 End Sub
 
 Private Sub c_cb_name_select_Change()
+On Error GoTo ErrorHandler ' Error handling
 
-'this si the place I think
-Dim fieldKeys As Variant: fieldKeys = Array("last_name", "first_name", "middle_initial") ' Dictates the order in which the values will be placed into the textboxes
-Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
-Dim DBS As DAO.Database, rst As DAO.recordSet
-Set DBS = Application.CurrentDb
-Set rst = DBS.OpenRecordset("SELECT last_name, middle_initial, first_name FROM clients WHERE ID = " & client_id) ' Explicit values to select
-
-
-If helpers.fill_fields_4_textboxes(fieldKeys, rst, Me) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
-    Call helpers.change_control_caption("Update", Me.Create_Update)
+If (Me.c_cb_name_select) And Me.c_cb_name_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
+    Call helpers.clear_form(Me)
+    Call helpers.change_control_caption("Create", Me.Create_Update) ' Reset
+    Resume ExitHandler ' Silently exit
 End If
 
 
-Set rst = Nothing ' Clear it out
-Set fieldKeys = Nothing ' Clear it out
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            ' Silently catch an exit without an error
+        Case Else ' All other cases
+            MsgBox ("Client Add Error Received: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+
+'this si the place I think
+'Dim fieldKeys As Variant: fieldKeys = Array("last_name", "first_name", "middle_initial") ' Dictates the order in which the values will be placed into the textboxes
+'Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
+'Dim DBS As DAO.Database, rst As DAO.recordSet
+'Set DBS = Application.CurrentDb
+'Set rst = DBS.OpenRecordset("SELECT last_name, middle_initial, first_name FROM clients WHERE ID = " & client_id) ' Explicit values to select
+
+
+'If helpers.fill_fields_4_textboxes(fieldKeys, rst, Me) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+ '   Call helpers.change_control_caption("Update", Me.Create_Update)
+'End If
+
+
+'Set rst = Nothing ' Clear it out
+'Set fieldKeys = Nothing ' Clear it out
 
 
 End Sub
