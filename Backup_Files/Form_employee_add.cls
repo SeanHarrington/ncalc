@@ -112,12 +112,26 @@ Private Sub Create_Update_Click()
     
 End Sub
 
+Private Sub e_cb_name_select_AfterUpdate()
+
+
+End Sub
+
 Private Sub e_cb_name_select_BeforeUpdate(Cancel As Integer)
+
 
 End Sub
 
 Private Sub e_cb_name_select_Change()
-'this si the place I think
+On Error GoTo ErrorHandler
+
+If e_cb_name_select And IsNull(e_cb_name_select.Column(0)) = True Then
+    Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
+End If
+
+
+
+
 Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial") ' Dictates the order in which the values will be placed into the textboxes
 Dim employee_id As Integer: employee_id = Me.e_cb_name_select.Column(0) ' Retrieve the employee_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("employees"), "WHERE ID = " & employee_id)
@@ -133,6 +147,17 @@ End If
 
 Set rst = Nothing ' Clear it out
 Set textboxAttrs = Nothing ' Clear it out
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            ' Silently catch an exit without an error
+        Case Else ' All other cases
+            MsgBox ("Error Received: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+
 
 
 
