@@ -119,7 +119,7 @@ Private Sub e_cb_name_select_AfterUpdate()
 End Sub
 
 Private Sub e_cb_name_select_BeforeUpdate(Cancel As Integer)
-
+On Error GoTo ErrorHandler
 If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = True Then ' If ID doesn't exist then we have an invalid employee
     Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
 End If

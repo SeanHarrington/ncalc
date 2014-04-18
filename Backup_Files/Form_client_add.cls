@@ -21,11 +21,7 @@ End Sub
 Private Sub c_cb_name_select_BeforeUpdate(Cancel As Integer)
 On Error GoTo ErrorHandler ' Error handling
 
-If (Me.c_cb_name_select) And Me.c_cb_name_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
-    Call helpers.clear_form(Me)
-    Call helpers.change_control_caption("Create", Me.Create_Update) ' Reset
-    Resume ExitHandler ' Silently exit
-End If
+
 
 If Me.c_cb_name_select And IsNull(Me.c_cb_name_select.Column(0)) = True Then
     Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
@@ -132,23 +128,23 @@ Dim fillColTab As String
 Dim intCount As Integer: intCount = 0 ' Initialize to zero
 
 
-If IsNull(Me.emp_add_text_first) = False Then
-    first_name = Me.emp_add_text_first.Value
+If IsNull(Me.client_add_text_first) = False Then
+    first_name = Me.client_add_text_first.Value
 Else
     'Call validation.Instance.Highlight(Me.emp_add_text_first)
 
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
-If IsNull(Me.emp_add_text_last) = False Then
-    last_name = Me.emp_add_text_last.Value
+If IsNull(Me.client_add_text_last) = False Then
+    last_name = Me.client_add_text_last.Value
 Else
 
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
-If IsNull(Me.emp_add_text_middle) = False Then
-    middle_name = Me.emp_add_text_middle.Value
+If IsNull(Me.client_add_text_middle) = False Then
+    middle_name = Me.client_add_text_middle.Value
 Else
     middle_name = " " ' Set optional field to empty value
 End If
@@ -173,11 +169,11 @@ Else
 fillColTab = "INSERT INTO clients (first_name,last_name,middle_initial) VALUES ('" & first_name & "','" & last_name & "','" & middle_name & "');"
 CurrentDb.Execute fillColTab, dbFailOnError
 
-Me.emp_add_text_last.Value = ""
-Me.emp_add_text_middle.Value = ""
-Me.emp_add_text_first.Value = ""
+Me.client_add_text_last.Value = ""
+Me.client_add_text_middle.Value = ""
+Me.client_add_text_first.Value = ""
 
-Me.emp_add_text_last.SetFocus
+Me.client_add_text_first.SetFocus
 MsgBox "New Client Record Successfully Created"
 
 
