@@ -112,6 +112,31 @@ Private Sub Create_Update_Click()
     
 End Sub
 
+Private Sub e_btn_ihss_Click()
+On Error GoTo ErrorHandler
+    If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = False Then
+       Dim employee_id As Integer: employee_id = Me.e_cb_name_select.Column(0)
+       
+       'MsgBox ("Sending id = '" & employee_id & "'")
+       DoCmd.Close acForm, "ihss_eligibility" ' Reload it, for now
+       DoCmd.OpenForm "ihss_eligibility", , , , , , "ihss_cb_emp_select|" & Me.e_cb_name_select.Column(0)
+       
+    Else
+       DoCmd.OpenForm "ihss_eligibility" ' No options
+    End If
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            ' Silently catch an exit without an error
+        Case Else ' All other cases
+            MsgBox ("Error Received: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+End Sub
+
 Private Sub e_cb_name_select_AfterUpdate()
     
 
