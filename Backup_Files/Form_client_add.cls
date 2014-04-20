@@ -30,7 +30,7 @@ End If
 Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial") ' Dictates the order in which the values will be placed into the textboxes
 Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("clients"), "WHERE ID = " & client_id)
-Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
+Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.currentdb)
 
 
 'Dim DBS As DAO.Database, rst As DAO.recordSet
@@ -159,7 +159,7 @@ End If
 If intCount > 0 Then ' Update client
     Dim lookupAttrs As Variant: lookupAttrs = Array("first_name ='" & first_name & "',last_name = '" & last_name & "', middle_initial = '" & middle_name & "'")
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("clients"), "WHERE ID = " & client_id)
-    CurrentDb.Execute query, dbFailOnError
+    currentdb.Execute query, dbFailOnError
     Set lookupAttrs = Nothing ' Clear it out
 Else
 
@@ -167,7 +167,7 @@ Else
 
 
 fillColTab = "INSERT INTO clients (first_name,last_name,middle_initial) VALUES ('" & first_name & "','" & last_name & "','" & middle_name & "');"
-CurrentDb.Execute fillColTab, dbFailOnError
+currentdb.Execute fillColTab, dbFailOnError
 
 Me.client_add_text_last.Value = ""
 Me.client_add_text_middle.Value = ""

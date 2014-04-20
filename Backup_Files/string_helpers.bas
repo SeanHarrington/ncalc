@@ -9,7 +9,7 @@ Option Explicit ' Explicit 'typing' for variables
 ' whereExpr (whereExpression) is a custom tailored string conditional--easier and more portable this way.
 
 Public Function assemble_query(queryType As QueriesType, ByVal attrs As Variant, ByVal fromTables As Variant _
-, ByVal whereExpr As String) As String ' Return  custom query
+, Optional ByVal whereExpr As String = "", Optional ByVal insertValues As String = "") As String  ' Return  custom query
     If IsNull(attrs) Or IsNull(fromTables) Then ' We must have attributes and from tables for select, insert or delete
         queryType = InvalidQuery ' Overwrite with invalid query
     End If
@@ -18,7 +18,7 @@ Public Function assemble_query(queryType As QueriesType, ByVal attrs As Variant,
         Case QueriesType.SelectQuery
             assemble_query = gen_select_statement(attrs, fromTables, whereExpr) ' Private call
         Case QueriesType.InsertQuery
-            assemble_query = gen_insert_statement() ' Private call
+            assemble_query = gen_insert_statement(attrs, fromTables, insertValues) ' Private call
         Case QueriesType.DeleteQuery
             assemble_query = gen_delete_statement()  ' Private call
         Case QueriesType.updateQuery
@@ -41,8 +41,12 @@ End Function
 
 
 
-Private Function gen_insert_statement() As String ' Generate insert
-
+Private Function gen_insert_statement(ByRef insertAttrs As Variant, ByRef intoTable As Variant _
+, ByRef insertValues As String) As String ' Generate insert
+    ' Example "INSERT INTO employees (first_name,last_name,middle_initial) VALUES ('" & first_name & "','" & last_name & "','" & middle_name & "');"
+    Dim insert_part As String: insert_part = "INSERT INTO " + gen_tables_4_sql(intoTable) + " (" + gen_attrs_4_sql(insertAttrs) + ")"
+    Dim values_part As String: values_part = " VALUES (" + insertValues + ");"
+    gen_insert_statement = (insert_part + values_part)
 
 End Function
 
@@ -101,6 +105,21 @@ Private Function gen_tables_4_sql(ByRef fromTables As Variant)
     gen_tables_4_sql = tables_list ' Return list of tables
 End Function
 
+Public Function join_array_to_str(ByRef arr As Variant, Optional ByVal delimiter As String = " ") As String
+    On Error GoTo ErrorHandler
+    
+        join_array_to_str = Join(arr, delimiter) ' Use library join function
+ExitHandler:
+    Exit Function
+ErrorHandler:
+    Select Case Err
+        Case Else ' All other cases
+            MsgBox ("join_array_to_str Error: " + Err.Description)
+            join_array_to_str = "" ' Error received
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+
+End Function
 
 
 
