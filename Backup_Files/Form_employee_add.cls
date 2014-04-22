@@ -107,7 +107,7 @@ End If
     
   
     
-If intCount > 0 Then ' Update employee
+If intCount > 0 Then ' Update employee, since employee exists
     Dim lookupAttrs As Variant: lookupAttrs = Array("first_name = '" & first_name & "'", "last_name = '" & last_name & "'" _
     , "middle_initial = '" & middle_name & "'", "payrate = '" & pay_rate & "'", "sick_hour_rate = " & sick_leave_rate _
     , "title = '" & title & "'", "phone = '" & phone & "'", "regional_center = " & regional_center _
@@ -115,7 +115,7 @@ If intCount > 0 Then ' Update employee
     
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("employees"), "WHERE ID = " & emp_id)
     'currentdb.Execute query, dbFailOnError
-    Call helpers.exec_query(query, Application.currentdb)
+    Call helpers.exec_query(query, Application.CurrentDb)
         
     Set lookupAttrs = Nothing ' Clear it out
 Else ' Submit/Create new employee
@@ -134,16 +134,12 @@ Dim attrs As Variant: attrs = Array("first_name", "last_name", "middle_initial",
 , "title", "phone", "regional_center", "comments")
 
 Dim insertVals As String: insertVals = string_helpers.join_array_to_str(insertAttrs, ",")
-MsgBox (insertVals)
 
 fillColTab = string_helpers.assemble_query(InsertQuery, attrs, Array("employees"), , insertVals)
-MsgBox (fillColTab)
 
-currentdb.Execute fillColTab, dbFailOnError
+'currentdb.Execute fillColTab, dbFailOnError
+Call helpers.exec_query(fillColTab, Application.CurrentDb)
 
-'Me.emp_add_text_last.Value = ""
-'Me.emp_add_text_middle.Value = ""
-'Me.emp_add_text_first.Value = ""
 Set insertAttrs = Nothing
 Set attrs = Nothing
 
@@ -187,7 +183,6 @@ On Error GoTo ErrorHandler
     If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = False Then
        Dim employee_id As Integer: employee_id = Me.e_cb_name_select.Column(0)
        
-       'MsgBox ("Sending id = '" & Me.e_cb_name_select.Column(0) & "'")
        DoCmd.Close acForm, "ihss_eligibility" ' Reload it, for now
        DoCmd.OpenForm "ihss_eligibility", , , , , , "ihss_cb_emp_select|" & Me.e_cb_name_select.Column(0)
        
@@ -202,10 +197,7 @@ On Error GoTo ErrorHandler
         End If
         
         
-        
-        
-        
-        
+
         
     End If
     
@@ -245,7 +237,7 @@ Dim attrs As Variant: attrs = Array("last_name", "first_name", "middle_initial" 
 
 Dim employee_id As Integer: employee_id = Me.e_cb_name_select.Column(0) ' Retrieve the employee_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, attrs, Array("employees"), "WHERE ID = " & employee_id)
-Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.currentdb)
+Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
 'Set DBS = Application.CurrentDb
 'Set rst = DBS.OpenRecordset("SELECT last_name, middle_initial, first_name FROM employees WHERE ID = " & employee_id) ' Explicit values to select
 'Set rst = helpers.get_record(query, Application.CurrentDb)
