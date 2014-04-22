@@ -235,16 +235,11 @@ If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = True Then ' I
 End If
 
 
-Dim ignoreObjs As Object
-Set ignoreObjs = CreateObject("Scripting.Dictionary")
-Call ignoreObjs.Add("0", "e_cb_name_select")
+Dim ignoreObjs As Object: Set ignoreObjs = CreateObject("Scripting.Dictionary")
+Call ignoreObjs.Add("e_cb_name_select", "e_cb_name_select") ' Key, Value Pair, key must always be unique.
 
 Dim attrs As Variant: attrs = Array("last_name", "first_name", "middle_initial" _
 , "regional_center", "phone", "sick_hour_rate", "payrate", "title", "comments") ' Dictates the order to fill the boxes in
-
-
-
-
 
 
 
@@ -255,13 +250,15 @@ Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.curren
 'Set rst = DBS.OpenRecordset("SELECT last_name, middle_initial, first_name FROM employees WHERE ID = " & employee_id) ' Explicit values to select
 'Set rst = helpers.get_record(query, Application.CurrentDb)
 
-If IsNull(rst) = False And helpers.fill_fields(attrs, rst, Me, ignoreObjs) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+If IsNull(rst) = False And helpers.populate(attrs, rst, Me, ignoreObjs) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
+' Garbage handler does most of the work, we just need to clear it out to help move it along
 
 Set rst = Nothing ' Clear it out
 Set attrs = Nothing ' Clear it out
+Set ignoreObjs = Nothing ' Clear it out
 ExitHandler:
     Exit Sub
 ErrorHandler:
@@ -269,7 +266,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            MsgBox ("e_cb_name_select Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub

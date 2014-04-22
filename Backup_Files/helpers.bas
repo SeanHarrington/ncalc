@@ -42,8 +42,8 @@ ErrorHandler:
 
 End Function
 
-Public Function fill_fields(ByRef fieldKeys As Variant, ByRef recordSet As DAO.recordSet, _
-ByRef myForm As Form, Optional ByRef ignCol As Scripting.Dictionary = Null) As Boolean ' fieldKeys is an array, recordSet for a select query, myForm is a form
+Public Function populate(ByRef fieldKeys As Variant, ByRef recordSet As DAO.recordSet, _
+ByRef myForm As Form, Optional ByRef ignDict As Scripting.dictionary = Null) As Boolean ' fieldKeys is an array, recordSet for a select query, myForm is a form
 
 On Error GoTo ErrorHandler ' Error handling
 On Error Resume Next ' Error handling, for the For Each loop Added by - James A. 4/16/2014
@@ -53,35 +53,36 @@ On Error Resume Next ' Error handling, for the For Each loop Added by - James A.
 Dim vntControl As Variant ' vntControl can be any type of control in this sub procedure
 Dim index As Integer: index = 0 ' Index for recordSet.Fields(index) iteration
 Dim indexMax As Integer: indexMax = UBound(fieldKeys) ' Upper bounds index for the fieldKeys array variable
-Dim ignored As Boolean
+Dim ignored As Boolean: ignored = False ' By default, in case ignDict is null
 
 For Each vntControl In myForm.Controls ' Grab myForm's controls
     
     If vntControl.ControlType = acTextBox And index <= indexMax Then ' If the variant control type is equal to an access TextBox
-          ignored = sender_contains_key(vntControl.Name, CStr(index), ignCol)
-        If ignored = False Then
-            'MsgBox ("Setting acTextBox to: " & recordSet.Fields(fieldKeys(index)))
+          
+          If IsNull(ignDict) = False Then
+            ignored = sender_is_dkey(vntControl.Name, ignDict)
+          End If
+          
+        If ignored = False Then ' Then go ahead and set the value
+        
             vntControl.Value = recordSet.Fields(fieldKeys(index)) ' Then search the key in the recordSet.Fields object
             index = index + 1 ' Increment index by 1
-        ElseIf ignored = True Then
-            'vntControl.Value = recordSet.Fields(fieldKeys(index)) ' Then search the key in the recordSet.Fields object
-            'index = index + 1 ' Increment index by 1
+        
+        ElseIf ignored = True Then ' Then ignore it
+        
         End If
     ElseIf vntControl.ControlType = acComboBox And index <= indexMax Then
-        ignored = sender_contains_key(vntControl.Name, CStr(index), ignCol)
-        'MsgBox ("Sender is: " + vntControl.Name + " and ignored is" & ignored)
-        If ignored = False Then
-            
-            
-           'MsgBox ("Setting combobox to: " & val(recordSet.Fields(fieldKeys(index))))
+    
+        If IsNull(ignDict) = False Then
+            ignored = sender_is_dkey(vntControl.Name, ignDict)
+        End If
+        
+        If ignored = False Then ' Then go ahead and set the value
             
             vntControl.Value = val(recordSet.Fields(fieldKeys(index)))
-            
-            
             index = index + 1
-        ElseIf ignored = True Then
-            'vntControl.Value = val(recordSet.Fields(fieldKeys(index)))
-            'index = index + 1
+        ElseIf ignored = True Then ' Then ignore it
+            
         End If
     End If
    
@@ -90,7 +91,7 @@ Next vntControl ' This still needs to exit when we've reached the indexMax but i
 'Form.emp_add_text_last.Value = rst.Fields("last_name")
 'Form.emp_add_text_middle.Value = rst.Fields("middle_initial")
 'Form.emp_add_text_first.Value = rst.Fields("first_name")
-fill_fields = True ' Successfully filled the textboxes
+populate = True ' Successfully filled the textboxes
 
 
 
@@ -101,32 +102,27 @@ ErrorHandler:
     Select Case Err
         Case Else ' All other cases
             MsgBox ("Fill Fields Error: " + Err.Description)
-            fill_fields = False ' Error received
+            populate = False ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
 End Function
-Private Function sender_contains_key(ByVal sender As String, ByVal key As String, _
-ByRef collect As Scripting.Dictionary) As Boolean
+Private Function sender_is_dkey(ByVal sender As String, ByRef dict As Scripting.dictionary) As Boolean
     On Error GoTo ErrorHandler
-    Dim obj As Variant
     
     
-        If CStr(collect(key)) = sender Then
-            sender_contains_key = True ' Sender is in so return true
+        If IsNull(dict) = False And CStr(dict(sender)) = sender Then
+            sender_is_dkey = True ' Sender is in so return true
         Else
-            sender_contains_key = False ' Sender is not
+            sender_is_dkey = False ' Sender is not
         End If
         
-        
-        
-    'sender_contains_key = False
 'Now exit
 ExitHandler:
     Exit Function
 ErrorHandler:
-        MsgBox ("Sender_contains_key Error: " + Err.Description)
-        sender_contains_key = True ' Error received
+        MsgBox ("Sender_is_dkey Error: " + Err.Description)
+        sender_is_dkey = True ' Error received
         Resume ExitHandler ' Invoke Exit Handler
 End Function
 Private Function contains_key(ByVal key As Variant, ByRef hash As Collection) As Boolean
