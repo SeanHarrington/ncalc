@@ -10,7 +10,7 @@ Option Explicit ' Explicit 'typing' for variables
 
 Public Function assemble_query(queryType As QueriesType, ByVal attrs As Variant, ByVal fromTables As Variant _
 , Optional ByVal whereExpr As String = "", Optional ByVal insertValues As String = "") As String  ' Return  custom query
-    If IsNull(attrs) Or IsNull(fromTables) Then ' We must have attributes and from tables for select, insert or delete
+    If queryType <> DeleteQuery And (IsNull(attrs) Or IsNull(fromTables)) Then ' We must have attributes and from tables for select, insert or delete
         queryType = InvalidQuery ' Overwrite with invalid query
     End If
     
@@ -20,7 +20,7 @@ Public Function assemble_query(queryType As QueriesType, ByVal attrs As Variant,
         Case QueriesType.InsertQuery
             assemble_query = gen_insert_statement(attrs, fromTables, insertValues) ' Private call
         Case QueriesType.DeleteQuery
-            assemble_query = gen_delete_statement()  ' Private call
+            assemble_query = gen_delete_statement(fromTables, whereExpr)  ' Private call
         Case QueriesType.updateQuery
             assemble_query = gen_update_statement(attrs, fromTables, whereExpr) ' Private call
         Case InvalidQuery
@@ -50,8 +50,11 @@ Private Function gen_insert_statement(ByRef insertAttrs As Variant, ByRef intoTa
 
 End Function
 
-Private Function gen_delete_statement() As String ' Generate delete
-
+Private Function gen_delete_statement(ByRef fromTables As Variant, ByRef whereExpr As String) As String ' Generate delete
+    'DELETE FROM table_name
+    'WHERE some_column=some_value;
+    Dim delete_part As String: delete_part = "DELETE FROM " + gen_tables_4_sql(fromTables)
+    gen_delete_statement = (delete_part + " " + whereExpr) ' Send back the delete statement
 
 End Function
 

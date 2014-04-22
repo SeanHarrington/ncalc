@@ -96,16 +96,14 @@ If IsNull(Me.emp_add_text_comment) = False Then
 Else
     comment = " " ' Optional
 End If
+
 ' CLng(Nz(DLookup("ID", "Table1"),0))
 
     If IsNull(Me.e_cb_name_select.Value) = False Then
-        'Me.e_cb_name_select.Column(0) ' Employee_id
-         emp_id = Me.e_cb_name_select.Column(0)
-        'intCount = CLng(Nz(DLookup("ID", "employees", "first_name = '" & first_name & "' and last_name = '" & last_name & "' and middle_initial = '" & middle_name & "'"), 0))
+    
+        emp_id = Me.e_cb_name_select.Column(0)
         intCount = CLng(Nz(DLookup("ID", "employees", "ID = " & emp_id), 0))
     End If
-    
-  
     
 If intCount > 0 Then ' Update employee, since employee exists
     Dim lookupAttrs As Variant: lookupAttrs = Array("first_name = '" & first_name & "'", "last_name = '" & last_name & "'" _
@@ -114,16 +112,12 @@ If intCount > 0 Then ' Update employee, since employee exists
     , "comments = '" & comment & "'")
     
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("employees"), "WHERE ID = " & emp_id)
-    'currentdb.Execute query, dbFailOnError
+    
     Call helpers.exec_query(query, Application.CurrentDb)
         
     Set lookupAttrs = Nothing ' Clear it out
 Else ' Submit/Create new employee
 
-'SELECT [employees].[ID], [employees].[last_name] + ",  " + [employees].[first_name] + " " + [employees].[middle_initial] FROM employees ORDER BY [last_name], [first_name], [middle_initial];
-
-
-'fillColTab = "INSERT INTO employees (first_name,last_name,middle_initial) VALUES ('" & first_name & "','" & last_name & "','" & middle_name & "');"
 
 Dim insertAttrs As Variant: insertAttrs = Array("'" & first_name & "'", "'" & last_name _
     & "'", "'" & middle_name & "'", "" & yes_no, "" & pay_rate _
@@ -140,6 +134,8 @@ fillColTab = string_helpers.assemble_query(InsertQuery, attrs, Array("employees"
 'currentdb.Execute fillColTab, dbFailOnError
 Call helpers.exec_query(fillColTab, Application.CurrentDb)
 
+
+' Clean up section, garbage collector handles the real clean up
 Set insertAttrs = Nothing
 Set attrs = Nothing
 
@@ -166,15 +162,54 @@ ErrorHandler:
     
 End Sub
 
-
-Private Sub Command18_Click()
-
+Private Sub Delete_Employee()
+    On Error GoTo ErrorHandler
+    
+    Dim emp_id As Integer
+    Dim intCount As Integer
+    Dim query As String
+     If IsNull(Me.e_cb_name_select.Value) = False Then
+        emp_id = Me.e_cb_name_select.Column(0)
+        intCount = CLng(Nz(DLookup("ID", "employees", "ID = " & emp_id), 0))
+    End If
+    
+    If intCount > 0 Then ' Valid delete since employee exists
+        query = string_helpers.assemble_query(DeleteQuery, Null, Array("employees"), "WHERE ID = " & emp_id)
+        Call helpers.exec_query(query, Application.CurrentDb)
+    Else
+        MsgBox ("Not a valid employee, please select an employee from the combobox")
+        Exit Sub
+    End If
+    
+    Call helpers.clear_form(Me)
+    
+    MsgBox "Employee Record Successfully Deleted"
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Silently exit
+            ' Exit silent
+        Case Else ' All other cases
+            MsgBox ("Delete Employee Error: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+    
 End Sub
+
+
 
 Private Sub Create_Update_Click()
   
     Call Submit_Employee
     
+End Sub
+
+Private Sub Delete_Click()
+    
+    Call Delete_Employee
+
 End Sub
 
 Private Sub e_btn_ihss_Click()
@@ -196,9 +231,7 @@ On Error GoTo ErrorHandler
             
         End If
         
-        
 
-        
     End If
     
 ExitHandler:
