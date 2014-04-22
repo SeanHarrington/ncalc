@@ -13,6 +13,11 @@ Option Explicit ' Enforce strict variable 'typing'
 
 
 Private Sub ClearBtn_Click()
+    Call reset_form ' Reset the form to the default state
+End Sub
+
+Private Sub reset_form()
+
     Call helpers.clear_form(Me)
     Call helpers.change_control_caption("Create", Me.Create_Update)
 End Sub
@@ -141,6 +146,7 @@ Set attrs = Nothing
 
 
 Call helpers.clear_form(Me)
+Me![e_cb_name_select].Requery ' Refresh
 
 Me.emp_add_text_last.SetFocus
 MsgBox "New Employee Record Successfully Created"
@@ -181,8 +187,8 @@ Private Sub Delete_Employee()
         Exit Sub
     End If
     
-    Call helpers.clear_form(Me)
-    
+    Call reset_form ' Reset the form
+    Me![e_cb_name_select].Requery ' Refresh
     MsgBox "Employee Record Successfully Deleted"
     
 ExitHandler:
