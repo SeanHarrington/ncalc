@@ -72,7 +72,7 @@ End If
 If intCount > 0 Then ' Update house
     Dim lookupAttrs As Variant: lookupAttrs = Array("house_name ='" & house_name & "',address = '" & address & "',city = '" & city & "',state = '" & state & "', zip = '" & zip & "'")
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("houses"), "WHERE ID = " & house_id)
-    currentdb.Execute query, dbFailOnError
+    CurrentDb.Execute query, dbFailOnError
     
     Set lookupAttrs = Nothing ' Clear it out
 Else ' Submit/Create new house
@@ -82,7 +82,7 @@ Else ' Submit/Create new house
 
 
 fillColTab = "INSERT INTO houses (address,city, state, zip, phone, house_name) VALUES ('" & address & "','" & city & "','" & state & "', '" & zip & "', '" & phone & "', '" & house_name & "');"
-currentdb.Execute fillColTab, dbFailOnError
+CurrentDb.Execute fillColTab, dbFailOnError
 
 Me.house_add_text_addr.Value = ""
 Me.house_add_text_city.Value = ""
@@ -122,7 +122,7 @@ End If
 Dim textboxAttrs As Variant: textboxAttrs = Array("house_name", "address", "city", "state", "zip") ' Dictates the order in which the values will be placed into the textboxes
 Dim client_id As Integer: client_id = Me.ha_cb_select.Column(0) ' Retrieve the house_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("houses"), "WHERE ID = " & client_id)
-Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.currentdb)
+Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
 
 'Call fill_fields_4_textboxes(fieldKeys, rst, Me) ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
 If helpers.fill_fields_4_textboxes(textboxAttrs, rst, Me) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array

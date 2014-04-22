@@ -46,8 +46,6 @@ Dim intCount As Integer: intCount = 0 ' Initialized to zero
 If IsNull(Me.emp_add_text_first) = False Then
     first_name = Me.emp_add_text_first.Value
 Else
-    'Call validation.Instance.Highlight(Me.emp_add_text_first)
-
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
@@ -72,10 +70,8 @@ End If
 
 If IsNull(Me.emp_add_text_payrate) = False Then
     pay_rate = Format(val(Me.emp_add_text_payrate.Value), "currency")
-    'MsgBox (pay_rate)
 Else
     pay_rate = Format(0#, "currency")    ' Optional
-    'MsgBox (pay_rate)
 End If
 
 If IsNull(Me.emp_add_text_sickrate) = False Then
@@ -119,7 +115,9 @@ If intCount > 0 Then ' Update employee, since employee exists
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("employees"), "WHERE ID = " & emp_id)
     
     Call helpers.exec_query(query, Application.CurrentDb)
-        
+     
+    Me![e_cb_name_select].Requery ' Refresh
+     
     Set lookupAttrs = Nothing ' Clear it out
 Else ' Submit/Create new employee
 
@@ -145,7 +143,7 @@ Set insertAttrs = Nothing
 Set attrs = Nothing
 
 
-Call helpers.clear_form(Me)
+Call reset_form ' Reset the form
 Me![e_cb_name_select].Requery ' Refresh
 
 Me.emp_add_text_last.SetFocus
@@ -180,7 +178,7 @@ Private Sub Delete_Employee()
     End If
     
     If intCount > 0 Then ' Valid delete since employee exists
-        query = string_helpers.assemble_query(DeleteQuery, Null, Array("employees"), "WHERE ID = " & emp_id)
+        query = string_helpers.assemble_query(DeleteQuery, Nothing, Array("employees"), "WHERE ID = " & emp_id)
         Call helpers.exec_query(query, Application.CurrentDb)
     Else
         MsgBox ("Not a valid employee, please select an employee from the combobox")

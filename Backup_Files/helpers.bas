@@ -43,7 +43,7 @@ ErrorHandler:
 End Function
 
 Public Function populate(ByRef fieldKeys As Variant, ByRef recordSet As DAO.recordSet, _
-ByRef myForm As Form, Optional ByRef ignDict As Scripting.dictionary = Null) As Boolean ' fieldKeys is an array, recordSet for a select query, myForm is a form
+ByRef myForm As Form, Optional ByRef ignDict As Scripting.dictionary = Nothing) As Boolean ' fieldKeys is an array, recordSet for a select query, myForm is a form
 
 On Error GoTo ErrorHandler ' Error handling
 On Error Resume Next ' Error handling, for the For Each loop Added by - James A. 4/16/2014
@@ -59,7 +59,7 @@ For Each vntControl In myForm.Controls ' Grab myForm's controls
     
     If vntControl.ControlType = acTextBox And index <= indexMax Then ' If the variant control type is equal to an access TextBox
           
-          If IsNull(ignDict) = False Then
+          If Not (ignDict Is Nothing) Then
             ignored = sender_is_dkey(vntControl.Name, ignDict)
           End If
           
@@ -73,7 +73,7 @@ For Each vntControl In myForm.Controls ' Grab myForm's controls
         End If
     ElseIf vntControl.ControlType = acComboBox And index <= indexMax Then
     
-        If IsNull(ignDict) = False Then
+        If Not (ignDict Is Nothing) Then
             ignored = sender_is_dkey(vntControl.Name, ignDict)
         End If
         
@@ -101,7 +101,7 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All other cases
-            MsgBox ("Fill Fields Error: " + Err.Description)
+            MsgBox ("Populate Error: " + Err.Description)
             populate = False ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select
@@ -111,7 +111,7 @@ Private Function sender_is_dkey(ByVal sender As String, ByRef dict As Scripting.
     On Error GoTo ErrorHandler
     
     
-        If IsNull(dict) = False And CStr(dict(sender)) = sender Then
+        If Not (dict Is Nothing) And CStr(dict(sender)) = sender Then
             sender_is_dkey = True ' Sender is in so return true
         Else
             sender_is_dkey = False ' Sender is not
@@ -167,7 +167,7 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All Error cases not accounted for
-            MsgBox ("Error Received: " + Err.Description)
+            MsgBox ("change_control_caption Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub

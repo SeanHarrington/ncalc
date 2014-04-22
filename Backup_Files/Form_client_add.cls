@@ -11,36 +11,73 @@ Option Compare Database
 Option Explicit ' Enforce strict variable 'typing'
 
 
-Private Sub Clear_Btn_Click()
-    Call helpers.clear_form(Me)
-    Call helpers.change_control_caption("Create", Me.Create_Update)
+Private Sub c_btn_ihss_Click()
+On Error GoTo ErrorHandler
+    
+    If Me.c_cb_name_select And IsNull(Me.c_cb_name_select.Column(0)) = False Then
+       Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0)
+       
+       DoCmd.Close acForm, "ihss_eligibility" ' Reload it, for now
+       DoCmd.OpenForm "ihss_eligibility", , , , , , "ihss_cb_client_select|" & Me.c_cb_name_select.Column(0)
+       
+    Else
+        Dim answer As VbMsgBoxResult
+        answer = MsgBox("Continue without selecting a client?", vbQuestion + vbYesNo)
+        If answer = vbYes Then
+            DoCmd.OpenForm "ihss_eligibility" ' No options
+        Else
+            ' Else, stay here and don't open the form
+            
+        End If
+        
+
+    End If
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            ' Silently catch an exit without an error
+        Case Else ' All other cases
+            MsgBox ("Error Received: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
 End Sub
 
+Private Sub Clear_Btn_Click()
+   
+   Call reset_form
+   
+End Sub
 
+Private Sub reset_form()
+
+    Call helpers.clear_form(Me)
+    Call helpers.change_control_caption("Create", Me.Create_Update)
+    
+End Sub
 
 Private Sub c_cb_name_select_BeforeUpdate(Cancel As Integer)
 On Error GoTo ErrorHandler ' Error handling
-
 
 
 If Me.c_cb_name_select And IsNull(Me.c_cb_name_select.Column(0)) = True Then
     Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
 End If
 
-Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial") ' Dictates the order in which the values will be placed into the textboxes
+Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial", "authorized_regional_center_id" _
+, "monthly_ihss", "regional_center", "comments", "billable_hours")  ' Dictates the order in which the values will be placed into the textboxes
+
 Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("clients"), "WHERE ID = " & client_id)
-Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.currentdb)
+Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
+Dim ignObjs As Scripting.dictionary: Set ignObjs = CreateObject("Scripting.Dictionary")
+
+Call ignObjs.Add("c_cb_name_select", "c_cb_name_select")
 
 
-'Dim DBS As DAO.Database, rst As DAO.recordSet
-'Set DBS = Application.CurrentDb
-'Set rst = DBS.OpenRecordset("SELECT last_name, middle_initial, first_name FROM clients WHERE ID = " & client_id) ' Explicit values to select
-
-
-
-'Call fill_fields_4_textboxes(fieldKeys, rst, Me) ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
-If helpers.fill_fields_4_textboxes(textboxAttrs, rst, Me) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+If helpers.populate(textboxAttrs, rst, Me, ignObjs) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
@@ -65,8 +102,7 @@ Private Sub c_cb_name_select_Change()
 On Error GoTo ErrorHandler ' Error handling
 
 If (Me.c_cb_name_select) And Me.c_cb_name_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
-    Call helpers.clear_form(Me)
-    Call helpers.change_control_caption("Create", Me.Create_Update) ' Reset
+    Call reset_form
     Resume ExitHandler ' Silently exit
 End If
 
@@ -82,40 +118,10 @@ ErrorHandler:
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
-'this si the place I think
-'Dim fieldKeys As Variant: fieldKeys = Array("last_name", "first_name", "middle_initial") ' Dictates the order in which the values will be placed into the textboxes
-'Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
-'Dim DBS As DAO.Database, rst As DAO.recordSet
-'Set DBS = Application.CurrentDb
-'Set rst = DBS.OpenRecordset("SELECT last_name, middle_initial, first_name FROM clients WHERE ID = " & client_id) ' Explicit values to select
-
-
-'If helpers.fill_fields_4_textboxes(fieldKeys, rst, Me) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
- '   Call helpers.change_control_caption("Update", Me.Create_Update)
-'End If
-
-
-'Set rst = Nothing ' Clear it out
-'Set fieldKeys = Nothing ' Clear it out
 
 
 End Sub
 
-Private Sub Command16_Click() ' Click the Create/Update button
-    
-
-End Sub
-
-
-Private Sub clear_form()
-On Error Resume Next ' Error handling, in case control doesn't have an error property
-
-Dim vntControl As Variant ' vntControl can be any type of control
-For Each vntControl In Me.Controls
-    vntControl.Value = Null
-Next vntControl
-
-End Sub
 
 Private Sub Submit_Client()
 On Error GoTo ErrorHandler ' Error handling
@@ -124,6 +130,12 @@ Dim client_id As Integer
 Dim first_name As String
 Dim last_name As String
 Dim middle_name As String
+Dim regional_center As Integer
+Dim authorized_num As Integer
+Dim monthly_ihss As Integer
+Dim auth_hrs As Currency
+Dim comments As String
+Dim house_id As Integer: house_id = 0 ' Default
 Dim fillColTab As String
 Dim intCount As Integer: intCount = 0 ' Initialize to zero
 
@@ -131,15 +143,12 @@ Dim intCount As Integer: intCount = 0 ' Initialize to zero
 If IsNull(Me.client_add_text_first) = False Then
     first_name = Me.client_add_text_first.Value
 Else
-    'Call validation.Instance.Highlight(Me.emp_add_text_first)
-
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
 If IsNull(Me.client_add_text_last) = False Then
     last_name = Me.client_add_text_last.Value
 Else
-
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
@@ -148,30 +157,82 @@ If IsNull(Me.client_add_text_middle) = False Then
 Else
     middle_name = " " ' Set optional field to empty value
 End If
+
+If IsNull(Me.c_cb_region_select) = False And Me.c_cb_region_select.ListIndex <> -1 Then
+    regional_center = Me.c_cb_region_select.Column(0) ' Grab the text value
+Else
+    regional_center = 0
+End If
+
+If IsNull(Me.client_add_text_authn) = False Then
+    authorized_num = Me.client_add_text_authn.Value
+Else
+   authorized_num = 0
+End If
+
+If IsNull(Me.client_add_text_monthly_ihss) = False Then
+    monthly_ihss = Me.client_add_text_monthly_ihss.Value
+Else
+    monthly_ihss = 0
+End If
+
+If IsNull(Me.client_add_Text_auth_billable_hrs) = False Then
+     auth_hrs = Format(val(Me.client_add_Text_auth_billable_hrs.Value), "currency")
+Else
+    auth_hrs = Format(0#, "currency")
+End If
+
+If IsNull(Me.client_add_text_comments) = False Then
+    comments = Me.client_add_text_comments.Value
+Else
+    comments = " "
+End If
+
+
 ' CLng(Nz(DLookup("ID", "Table1"),0))
 
 If IsNull(Me.c_cb_name_select.Value) = False Then
     client_id = Me.c_cb_name_select.Column(0)
-    'intCount = CLng(Nz(DLookup("ID", "clients", "first_name = '" & first_name & "' and last_name = '" & last_name & "' and middle_initial = '" & middle_name & "'"), 0))
     intCount = CLng(Nz(DLookup("ID", "clients", "ID = " & client_id), 0))
 End If
 
 If intCount > 0 Then ' Update client
-    Dim lookupAttrs As Variant: lookupAttrs = Array("first_name ='" & first_name & "',last_name = '" & last_name & "', middle_initial = '" & middle_name & "'")
+    Dim lookupAttrs As Variant: lookupAttrs = Array("first_name = '" & first_name & "'", "last_name = '" & last_name & "'" _
+    , "middle_initial = '" & middle_name & "'", "regional_center = " & regional_center, "authorized_regional_center_id = " & authorized_num _
+    , "monthly_ihss = " & monthly_ihss, "billable_hours = " & auth_hrs, "comments = '" & comments & "'")
+    
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("clients"), "WHERE ID = " & client_id)
-    currentdb.Execute query, dbFailOnError
+    
+    Call helpers.exec_query(query, Application.CurrentDb)
+    Me![c_cb_name_select].Requery ' Refresh
     Set lookupAttrs = Nothing ' Clear it out
 Else
 
-'SELECT [employees].[ID], [employees].[last_name] + ",  " + [employees].[first_name] + " " + [employees].[middle_initial] FROM employees ORDER BY [last_name], [first_name], [middle_initial];
+Dim insertAttrs As Variant: insertAttrs = Array("'" & first_name & "'", "'" & last_name & "'" _
+    , "'" & middle_name & "'", "" & authorized_num _
+    , "" & monthly_ihss, "" & regional_center, "'" & comments & "'", "" & auth_hrs)
+
+Dim attrs As Variant: attrs = Array("first_name", "last_name", "middle_initial", "authorized_regional_center_id", "monthly_ihss" _
+, "regional_center", "comments", "billable_hours")
+    
+Dim insertVals As String: insertVals = string_helpers.join_array_to_str(insertAttrs, ",")
+
+fillColTab = string_helpers.assemble_query(InsertQuery, attrs, Array("clients"), , insertVals)
 
 
-fillColTab = "INSERT INTO clients (first_name,last_name,middle_initial) VALUES ('" & first_name & "','" & last_name & "','" & middle_name & "');"
-currentdb.Execute fillColTab, dbFailOnError
+Call helpers.exec_query(fillColTab, Application.CurrentDb)
 
-Me.client_add_text_last.Value = ""
-Me.client_add_text_middle.Value = ""
-Me.client_add_text_first.Value = ""
+' Cleanup but let the garbage collector do all the actual clean up
+Set insertAttrs = Nothing
+Set attrs = Nothing
+
+
+
+
+Call reset_form ' Reset it to default state
+Me![c_cb_name_select].Requery ' Refresh
+
+
 
 Me.client_add_text_first.SetFocus
 MsgBox "New Client Record Successfully Created"
@@ -193,24 +254,42 @@ ErrorHandler:
     
 End Sub
 
-
-
-Private Sub Command16_Enter()
-
+Private Sub Delete_Client()
+     On Error GoTo ErrorHandler
+    
+    Dim client_id As Integer
+    Dim intCount As Integer
+    Dim query As String
+     If IsNull(Me.c_cb_name_select.Value) = False Then
+        client_id = Me.c_cb_name_select.Column(0)
+        intCount = CLng(Nz(DLookup("ID", "clients", "ID = " & client_id), 0))
+    End If
+    
+    If intCount > 0 Then ' Valid delete since employee exists
+        query = string_helpers.assemble_query(DeleteQuery, Nothing, Array("clients"), "WHERE ID = " & client_id)
+        Call helpers.exec_query(query, Application.CurrentDb)
+    Else
+        MsgBox ("Not a valid client, please select a client from the combobox list")
+        Exit Sub
+    End If
+    
+    Call reset_form ' Reset the form
+    Me![c_cb_name_select].Requery ' Refresh
+    MsgBox "Client Record Successfully Deleted"
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Silently exit
+            ' Exit silent
+        Case Else ' All other cases
+            MsgBox ("Delete Client Error: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+    
 End Sub
 
-
-Private Sub Command17_Click()
-
-End Sub
-
-Private Sub Command17_Enter()
-
-End Sub
-
-Private Sub Command18_Click()
-
-End Sub
 
 Private Sub Create_Update_Click()
     Call Submit_Client
@@ -218,4 +297,11 @@ End Sub
 
 Private Sub OLEUnbound32_Updated(Code As Integer)
 
+End Sub
+
+
+Private Sub Delete_Click()
+    
+    Call Delete_Client
+    
 End Sub
