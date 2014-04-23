@@ -177,9 +177,9 @@ Else
 End If
 
 If IsNull(Me.client_add_Text_auth_billable_hrs) = False Then
-     auth_hrs = Format(val(Me.client_add_Text_auth_billable_hrs.Value), "currency")
+     auth_hrs = Me.client_add_Text_auth_billable_hrs.Value
 Else
-    auth_hrs = Format(0#, "currency")
+    auth_hrs = 0
 End If
 
 If IsNull(Me.client_add_text_comments) = False Then

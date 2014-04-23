@@ -227,7 +227,7 @@ On Error GoTo ErrorHandler
        
     Else
         Dim answer As VbMsgBoxResult
-        answer = MsgBox("Continue without a selected employee?", vbQuestion + vbYesNo)
+        answer = MsgBox("Continue without selecting an employee?", vbQuestion + vbYesNo)
         If answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else

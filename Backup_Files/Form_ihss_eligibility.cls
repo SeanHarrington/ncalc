@@ -12,6 +12,14 @@ Option Compare Database
 
 
 
+Private Sub Command35_Click()
+
+End Sub
+
+Private Sub ClearBtn_Click()
+    Call helpers.clear_form(Me)
+End Sub
+
 Private Sub Form_Activate()
     On Error GoTo ErrorHandler
     Dim x As Variant
@@ -64,3 +72,74 @@ End Sub
 Private Sub ihss_chb_check_Click()
 
 End Sub
+
+Private Sub ihss_update_Click()
+    Call submit_ihss
+End Sub
+
+
+Private Sub submit_ihss()
+    On Error GoTo ErrorHandler
+    Dim intCount As Integer: intCount = 0
+    Dim emp_id As Integer: emp_id = 0
+    Dim client_id As Integer: client_id = 0
+    Dim eligible As Boolean
+
+    
+    If IsNull(ihss_cb_emp_select.Value) = False Then
+        emp_id = ihss_cb_emp_select.Column(0)
+    Else
+        MsgBox ("You have not selected an employee")
+        Exit Sub
+    End If
+    
+    If IsNull(ihss_cb_client_select.Value) = False Then
+        client_id = ihss_cb_client_select.Column(0)
+    Else
+        MsgBox ("You have not selected a client")
+        Exit Sub
+    End If
+    
+    If IsNull(ihss_cb_eligibility_select.Value) = False Then
+        If (ihss_cb_eligibility_select.Value = "Yes") Then
+            eligible = True
+        ElseIf (ihss_cb_eligibility_select.Value = "No") Then
+            eligible = False
+        End If
+        
+       
+    Else
+        MsgBox ("Is this employee eligible for IHSS with this client?")
+        Exit Sub
+    End If
+    
+    
+    Dim whereQuery As String: whereQuery = string_helpers.join_array_to_str(Array("WHERE employee_id = " & emp_id, "and client_id = " & client_id))
+    
+    Dim query As String: query = string_helpers.assemble_query(SelectQuery, Array("ID", "employee_id", "client_id"), _
+    Array("ihss_eligibility"), whereQuery)
+    
+    Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
+    intCount = rst.RecordCount
+    If intCount > 0 Then ' Found so update the record
+        query = string_helpers.assemble_query(updateQuery, Array("ihss_eligible = " & eligible), Array("ihss_eligibility"), "WHERE ID = " & rst("ID"))
+        Call helpers.exec_query(query, Application.CurrentDb)
+    End If
+    
+    Set rst = Nothing ' Clear it out for the garbage collector
+
+    
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            'Handle silently
+        Case Else ' All other cases
+            MsgBox ("Submit_ihss Error: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+    
+End Sub
+
