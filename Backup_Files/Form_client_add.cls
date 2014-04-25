@@ -22,7 +22,7 @@ On Error GoTo ErrorHandler
        
     Else
         Dim answer As VbMsgBoxResult
-        answer = MsgBox("Continue without selecting a client?", vbQuestion + vbYesNo)
+        answer = msgbox("Continue without selecting a client?", vbQuestion + vbYesNo)
         If answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else
@@ -40,7 +40,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -91,7 +91,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Client Add Error Received: " + Err.Description)
+            msgbox ("Client Add Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
@@ -114,7 +114,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Client Add Error Received: " + Err.Description)
+            msgbox ("Client Add Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
@@ -131,9 +131,9 @@ Dim first_name As String
 Dim last_name As String
 Dim middle_name As String
 Dim regional_center As Integer
-Dim authorized_num As Integer
-Dim monthly_ihss As Integer
-Dim auth_hrs As Currency
+Dim authorized_num As Long
+Dim monthly_ihss As Long
+Dim auth_hrs As Long
 Dim comments As String
 Dim house_id As Integer: house_id = 0 ' Default
 Dim fillColTab As String
@@ -165,19 +165,20 @@ Else
 End If
 
 If IsNull(Me.client_add_text_authn) = False Then
-    authorized_num = Me.client_add_text_authn.Value
+    authorized_num = CLng(Me.client_add_text_authn.Value)
+
 Else
    authorized_num = 0
 End If
 
 If IsNull(Me.client_add_text_monthly_ihss) = False Then
-    monthly_ihss = Me.client_add_text_monthly_ihss.Value
+    monthly_ihss = CLng(Me.client_add_text_monthly_ihss.Value)
 Else
     monthly_ihss = 0
 End If
 
 If IsNull(Me.client_add_Text_auth_billable_hrs) = False Then
-     auth_hrs = Me.client_add_Text_auth_billable_hrs.Value
+     auth_hrs = CLng(Me.client_add_Text_auth_billable_hrs.Value)
 Else
     auth_hrs = 0
 End If
@@ -202,7 +203,7 @@ If intCount > 0 Then ' Update client
     , "monthly_ihss = " & monthly_ihss, "billable_hours = " & auth_hrs, "comments = '" & comments & "'")
     
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("clients"), "WHERE ID = " & client_id)
-    
+
     Call helpers.exec_query(query, Application.CurrentDb)
     Me![c_cb_name_select].Requery ' Refresh
     Set lookupAttrs = Nothing ' Clear it out
@@ -225,6 +226,7 @@ Call helpers.exec_query(fillColTab, Application.CurrentDb)
 ' Cleanup but let the garbage collector do all the actual clean up
 Set insertAttrs = Nothing
 Set attrs = Nothing
+insertVals = " " ' Clear it
 
 
 
@@ -235,7 +237,7 @@ Me![c_cb_name_select].Requery ' Refresh
 
 
 Me.client_add_text_first.SetFocus
-MsgBox "New Client Record Successfully Created"
+msgbox "New Client Record Successfully Created"
 
 
 End If
@@ -246,9 +248,9 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
-            MsgBox ("Please fill in required fields")
+            msgbox ("Please fill in required fields")
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Client_error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -269,13 +271,13 @@ Private Sub Delete_Client()
         query = string_helpers.assemble_query(DeleteQuery, Nothing, Array("clients"), "WHERE ID = " & client_id)
         Call helpers.exec_query(query, Application.CurrentDb)
     Else
-        MsgBox ("Not a valid client, please select a client from the combobox list")
+        msgbox ("Not a valid client, please select a client from the combobox list")
         Exit Sub
     End If
     
     Call reset_form ' Reset the form
     Me![c_cb_name_select].Requery ' Refresh
-    MsgBox "Client Record Successfully Deleted"
+    msgbox "Client Record Successfully Deleted"
     
 ExitHandler:
     Exit Sub
@@ -284,7 +286,7 @@ ErrorHandler:
         Case 20 ' Silently exit
             ' Exit silent
         Case Else ' All other cases
-            MsgBox ("Delete Client Error: " + Err.Description)
+            msgbox ("Delete Client Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     

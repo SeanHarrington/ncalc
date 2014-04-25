@@ -47,7 +47,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -89,14 +89,14 @@ Private Sub submit_ihss()
     If IsNull(ihss_cb_emp_select.Value) = False Then
         emp_id = ihss_cb_emp_select.Column(0)
     Else
-        MsgBox ("You have not selected an employee")
+        msgbox ("You have not selected an employee")
         Exit Sub
     End If
     
     If IsNull(ihss_cb_client_select.Value) = False Then
         client_id = ihss_cb_client_select.Column(0)
     Else
-        MsgBox ("You have not selected a client")
+        msgbox ("You have not selected a client")
         Exit Sub
     End If
     
@@ -109,7 +109,7 @@ Private Sub submit_ihss()
         
        
     Else
-        MsgBox ("Is this employee eligible for IHSS with this client?")
+        msgbox ("Is this employee eligible for IHSS with this client?")
         Exit Sub
     End If
     
@@ -123,7 +123,13 @@ Private Sub submit_ihss()
     intCount = rst.RecordCount
     If intCount > 0 Then ' Found so update the record
         query = string_helpers.assemble_query(updateQuery, Array("ihss_eligible = " & eligible), Array("ihss_eligibility"), "WHERE ID = " & rst("ID"))
+        msgbox (query)
         Call helpers.exec_query(query, Application.CurrentDb)
+        
+    Else
+    
+        msgbox ("Ihss eligibility between employee and client wasn't found.")
+        
     End If
     
     Set rst = Nothing ' Clear it out for the garbage collector
@@ -137,7 +143,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             'Handle silently
         Case Else ' All other cases
-            MsgBox ("Submit_ihss Error: " + Err.Description)
+            msgbox ("Submit_ihss Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     

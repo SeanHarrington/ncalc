@@ -27,15 +27,15 @@ End Sub
 Private Sub Submit_Employee()
 On Error GoTo ErrorHandler ' Error handling
 
-Dim emp_id As Integer
+Dim emp_id As Long ' changed to long
 Dim first_name As String
 Dim last_name As String
 Dim middle_name As String
 Dim pay_rate As Currency
-Dim sick_leave_rate As Integer
+Dim sick_leave_rate As Long ' Changed to long
 Dim title As String
 Dim phone As String
-Dim regional_center As Integer
+Dim regional_center As Long ' changed to long
 Dim comment As String
 Dim yes_no As Boolean: yes_no = True
 Dim fillColTab As String
@@ -63,7 +63,7 @@ Else
 End If
 
 If IsNull(Me.e_cb_region_select) = False And Me.e_cb_region_select.ListIndex <> -1 Then
-    regional_center = Me.e_cb_region_select.Column(0) ' Grab the text value
+    regional_center = CLng(Me.e_cb_region_select.Column(0)) ' Grab the text value
 Else
     regional_center = 0 ' Optional-default
 End If
@@ -75,7 +75,7 @@ Else
 End If
 
 If IsNull(Me.emp_add_text_sickrate) = False Then
-    sick_leave_rate = Me.emp_add_text_sickrate.Value
+    sick_leave_rate = CLng(Me.emp_add_text_sickrate.Value)
 Else
     sick_leave_rate = 0 ' Optional
 End If
@@ -147,7 +147,7 @@ Call reset_form ' Reset the form
 Me![e_cb_name_select].Requery ' Refresh
 
 Me.emp_add_text_last.SetFocus
-MsgBox "New Employee Record Successfully Created"
+msgbox "New Employee Record Successfully Created"
 
 
 End If
@@ -158,9 +158,9 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
-            MsgBox ("Please fill in required fields")
+            msgbox ("Please fill in required fields")
         Case Else ' All other cases
-            MsgBox ("Employee Add Form Error" + Err.Description)
+            msgbox ("Employee Add Form Error" + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -181,13 +181,13 @@ Private Sub Delete_Employee()
         query = string_helpers.assemble_query(DeleteQuery, Nothing, Array("employees"), "WHERE ID = " & emp_id)
         Call helpers.exec_query(query, Application.CurrentDb)
     Else
-        MsgBox ("Not a valid employee, please select an employee from the combobox")
+        msgbox ("Not a valid employee, please select an employee from the combobox")
         Exit Sub
     End If
     
     Call reset_form ' Reset the form
     Me![e_cb_name_select].Requery ' Refresh
-    MsgBox "Employee Record Successfully Deleted"
+    msgbox "Employee Record Successfully Deleted"
     
 ExitHandler:
     Exit Sub
@@ -196,7 +196,7 @@ ErrorHandler:
         Case 20 ' Silently exit
             ' Exit silent
         Case Else ' All other cases
-            MsgBox ("Delete Employee Error: " + Err.Description)
+            msgbox ("Delete Employee Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -227,7 +227,7 @@ On Error GoTo ErrorHandler
        
     Else
         Dim answer As VbMsgBoxResult
-        answer = MsgBox("Continue without selecting an employee?", vbQuestion + vbYesNo)
+        answer = msgbox("Continue without selecting an employee?", vbQuestion + vbYesNo)
         If answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else
@@ -245,7 +245,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -295,7 +295,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("e_cb_name_select Error: " + Err.Description)
+            msgbox ("e_cb_name_select Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -317,7 +317,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
