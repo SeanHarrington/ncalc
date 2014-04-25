@@ -91,7 +91,7 @@ Me.house_add_text_zip.Value = ""
 Me.house_add_text_name.Value = ""
 
 Me.house_add_text_name.SetFocus
-MsgBox "New House Record Successfully Created"
+msgbox "New House Record Successfully Created"
 
 
 End If
@@ -102,30 +102,39 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
-            MsgBox ("Please fill in required fields")
+            msgbox ("Please fill in required fields")
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
 End Sub
 
 
-Private Sub ha_cb_select_BeforeUpdate(Cancel As Integer)
+Private Sub ha_cb_select_BeforeUpdate(Cancel As Integer) ' Renamed, see other sub procedure below
+
+
+End Sub
+
+Private Sub ha_cb_select_Change() ' Renamed, see other sub procedure below
+
+End Sub
+
+Private Sub ha_cb_house_select_BeforeUpdate(Cancel As Integer)
 On Error GoTo ErrorHandler ' Error handling
 
 
-If Me.ha_cb_select And IsNull(Me.ha_cb_select.Column(0)) = True Then ' Invalid primary key
+If Me.ha_cb_house_select And IsNull(Me.ha_cb_house_select.Column(0)) = True Then ' Invalid primary key
     Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
 End If
 
-Dim textboxAttrs As Variant: textboxAttrs = Array("house_name", "address", "city", "state", "zip") ' Dictates the order in which the values will be placed into the textboxes
-Dim client_id As Integer: client_id = Me.ha_cb_select.Column(0) ' Retrieve the house_id
-Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("houses"), "WHERE ID = " & client_id)
+Dim textboxAttrs As Variant: textboxAttrs = Array("name", "address", "city", "state", "zip") ' Dictates the order in which the values will be placed into the textboxes
+Dim house_id As Integer: house_id = Me.ha_cb_house_select.Column(0) ' Retrieve the house_id
+Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("houses"), "WHERE ID = " & house_id)
 Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
 
 'Call fill_fields_4_textboxes(fieldKeys, rst, Me) ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
-If helpers.fill_fields_4_textboxes(textboxAttrs, rst, Me) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+If helpers.populate(textboxAttrs, rst, Me) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
@@ -140,15 +149,14 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Client Add Error Received: " + Err.Description)
+            msgbox ("Client House Select Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
-
 End Sub
 
-Private Sub ha_cb_select_Change()
+Private Sub ha_cb_house_select_Change()
 On Error GoTo ErrorHandler ' Error handling
-If (Me.ha_cb_select) And Me.ha_cb_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
+If (Me.ha_cb_house_select) And Me.ha_cb_house_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
     Call helpers.clear_form(Me)
     Call helpers.change_control_caption("Create", Me.Create_Update) ' Reset
     Resume ExitHandler ' Silently exit
@@ -161,7 +169,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            MsgBox ("Client Add Error Received: " + Err.Description)
+            msgbox ("Client House Select Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
