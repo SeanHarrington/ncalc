@@ -117,7 +117,7 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All other cases
-            MsgBox ("join_array_to_str Error: " + Err.Description)
+            msgbox ("join_array_to_str Error: " + Err.Description)
             join_array_to_str = "" ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select

@@ -9,8 +9,30 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Compare Database
 Option Explicit ' Enforce strict variable 'typing'
-
-
+Private Sub Blackout_Click()
+On Error GoTo ErrorHandler
+    
+    If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = False Then
+        Dim emp_id As Long: emp_id = Me.e_cb_name_select.Column(0) ' Get the idea to get the first and last name
+        Dim emp_name As String: emp_name = Me.e_cb_name_select.Column(1) ' Get the employee full name
+       DoCmd.Close acForm, "employee_blackout" ' Reload it, for now
+       DoCmd.OpenForm "employee_blackout", , , , , , "empb_name_text|" & emp_name & "|empb_box_id|" & emp_id
+       
+    Else
+        msgbox ("Please select a valid employee before attempting to go to the employee black out form")
+    End If
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            
+        Case Else ' All other cases
+            msgbox ("Employee Blackout Error" + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+End Sub
 
 Private Sub ClearBtn_Click()
     Call reset_form ' Reset the form to the default state
@@ -204,6 +226,10 @@ End Sub
 
 
 
+Private Sub Command63_Click()
+
+End Sub
+
 Private Sub Create_Update_Click()
   
     Call Submit_Employee
@@ -227,7 +253,7 @@ On Error GoTo ErrorHandler
        
     Else
         Dim answer As VbMsgBoxResult
-        answer = msgbox("Continue without selecting an employee?", vbQuestion + vbYesNo)
+        answer = msgbox("Continue to the IHSS Eligibility Form without selecting an employee?", vbQuestion + vbYesNo)
         If answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else

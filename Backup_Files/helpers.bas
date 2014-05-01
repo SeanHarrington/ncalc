@@ -35,7 +35,7 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All other cases
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Error Received: " + Err.Description)
             fill_fields_4_textboxes = False ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select
@@ -60,7 +60,7 @@ For Each vntControl In myForm.Controls ' Grab myForm's controls
     If vntControl.ControlType = acTextBox And index <= indexMax Then ' If the variant control type is equal to an access TextBox
           
           If Not (ignDict Is Nothing) Then
-            ignored = sender_is_dkey(vntControl.Name, ignDict)
+            ignored = sender_is_dkey(vntControl.name, ignDict)
           End If
           
         If ignored = False Then ' Then go ahead and set the value
@@ -74,7 +74,7 @@ For Each vntControl In myForm.Controls ' Grab myForm's controls
     ElseIf vntControl.ControlType = acComboBox And index <= indexMax Then
     
         If Not (ignDict Is Nothing) Then
-            ignored = sender_is_dkey(vntControl.Name, ignDict)
+            ignored = sender_is_dkey(vntControl.name, ignDict)
         End If
         
         If ignored = False Then ' Then go ahead and set the value
@@ -101,7 +101,7 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All other cases
-            MsgBox ("Populate Error: " + Err.Description)
+            msgbox ("Populate Error: " + Err.Description)
             populate = False ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select
@@ -121,7 +121,7 @@ Private Function sender_is_dkey(ByVal sender As String, ByRef dict As Scripting.
 ExitHandler:
     Exit Function
 ErrorHandler:
-        MsgBox ("Sender_is_dkey Error: " + Err.Description)
+        msgbox ("Sender_is_dkey Error: " + Err.Description)
         sender_is_dkey = True ' Error received
         Resume ExitHandler ' Invoke Exit Handler
 End Function
@@ -153,7 +153,7 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All Error cases not accounted for
-            MsgBox ("Error Received: " + Err.Description)
+            msgbox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Function
@@ -167,7 +167,7 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All Error cases not accounted for
-            MsgBox ("change_control_caption Error: " + Err.Description)
+            msgbox ("change_control_caption Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -194,7 +194,20 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All Error cases not accounted for
-            MsgBox ("Execute Query Error: " + Err.Description)
+            msgbox ("Execute Query Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
+
+
+Public Function valid_dates(ByRef start_date As Date, ByRef end_date As Date) As Boolean
+    
+    If end_date < start_date Then
+        valid_dates = False
+    Else
+        valid_dates = True
+    End If
+    
+End Function
+
+
