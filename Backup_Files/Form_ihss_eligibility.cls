@@ -89,14 +89,14 @@ Private Sub submit_ihss()
     If IsNull(ihss_cb_emp_select.Value) = False Then
         emp_id = ihss_cb_emp_select.Column(0)
     Else
-        msgbox ("You have not selected an employee")
+        msgbox ("Please select an employee before continuing")
         Exit Sub
     End If
     
     If IsNull(ihss_cb_client_select.Value) = False Then
         client_id = ihss_cb_client_select.Column(0)
     Else
-        msgbox ("You have not selected a client")
+        msgbox ("Please select an employee before continuing")
         Exit Sub
     End If
     
@@ -109,7 +109,7 @@ Private Sub submit_ihss()
         
        
     Else
-        msgbox ("Is this employee eligible for IHSS with this client?")
+        msgbox ("You have not selected whether this employee is IHSS eligible with this client.")
         Exit Sub
     End If
     
@@ -123,12 +123,26 @@ Private Sub submit_ihss()
     intCount = rst.RecordCount
     If intCount > 0 Then ' Found so update the record
         query = string_helpers.assemble_query(updateQuery, Array("ihss_eligible = " & eligible), Array("ihss_eligibility"), "WHERE ID = " & rst("ID"))
-        msgbox (query)
         Call helpers.exec_query(query, Application.CurrentDb)
         
+         msgbox ("Successfully updated the pre-existing IHSS eligibility record")
+        
     Else
-    
-        msgbox ("Ihss eligibility between employee and client wasn't found.")
+        Dim answer As VbMsgBoxResult
+        answer = msgbox("A Pre-existing IHSS Eligiblity record was not found, would you like to create one?", vbQuestion + vbYesNo)
+        If answer = vbYes Then ' Then go ahead and create the record 5/1/2014
+            Dim insertAttrs As Variant: insertAttrs = Array("" & emp_id, "" & client_id, "" & eligible)
+            Dim insertVals As String: insertVals = string_helpers.join_array_to_str(insertAttrs, ",")
+            query = string_helpers.assemble_query(InsertQuery, Array("employee_id", "client_id", "ihss_eligible"), Array("ihss_eligibility"), _
+            , insertVals)
+            
+           Call helpers.exec_query(query, Application.CurrentDb)
+           ' msgbox (query)
+           msgbox ("Successfully created a new IHSS eligibility record")
+            
+            
+            
+        End If
         
     End If
     
