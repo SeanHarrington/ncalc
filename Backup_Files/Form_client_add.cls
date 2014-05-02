@@ -11,6 +11,36 @@ Option Compare Database
 Option Explicit ' Enforce strict variable 'typing'
 
 
+Private Sub Activate_Click()
+      On Error GoTo ErrorHandler
+    
+    If Me.c_cb_name_select And IsNull(Me.c_cb_name_select.Column(0)) = False Then
+        'Dim yes_no As Boolean
+        Dim active As Boolean: active = Not (GetToggleVal()) ' Flip it
+        Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0)
+        Dim intCount As Integer: intCount = CLng(Nz(DLookup("ID", "clients", "ID = " & client_id), 0))
+        Dim query As String: query = "update clients set active = " & active
+        query = query + " where ID = " & client_id
+        Call helpers.exec_query(query, Application.CurrentDb)
+        Call ToggleActive(active)
+    Else
+        MsgBox ("Please select a valid client to activate")
+    End If
+    
+    
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            
+        Case Else ' All other cases
+            MsgBox ("Client Activate Error: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+End Sub
+
 Private Sub c_btn_ihss_Click()
 On Error GoTo ErrorHandler
     
@@ -22,7 +52,7 @@ On Error GoTo ErrorHandler
        
     Else
         Dim answer As VbMsgBoxResult
-        answer = msgbox("Continue without selecting a client?", vbQuestion + vbYesNo)
+        answer = MsgBox("Continue without selecting a client?", vbQuestion + vbYesNo)
         If answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else
@@ -40,7 +70,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Error Received: " + Err.Description)
+            MsgBox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -55,7 +85,7 @@ Private Sub reset_form()
 
     Call helpers.clear_form(Me)
     Call helpers.change_control_caption("Create", Me.Create_Update)
-    
+    Call ToggleActive(2) ' Any value other than 0 or 1 will trigger total reset
 End Sub
 
 Private Sub c_cb_name_select_BeforeUpdate(Cancel As Integer)
@@ -67,7 +97,7 @@ If Me.c_cb_name_select And IsNull(Me.c_cb_name_select.Column(0)) = True Then
 End If
 
 Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial", "authorized_regional_center_id" _
-, "monthly_ihss", "regional_center", "comments", "billable_hours")  ' Dictates the order in which the values will be placed into the textboxes
+, "monthly_ihss", "regional_center", "comments", "billable_hours", "active")  ' Dictates the order in which the values will be placed into the textboxes
 
 Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("clients"), "WHERE ID = " & client_id)
@@ -81,6 +111,8 @@ If helpers.populate(textboxAttrs, rst, Me, ignObjs) = True Then ' Fill in the fi
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
+Call ToggleActive(rst("active"))
+
 Set rst = Nothing ' Clear it out
 Set textboxAttrs = Nothing ' Clear it out
 
@@ -91,7 +123,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Client Add Error Received: " + Err.Description)
+            MsgBox ("Client Add Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
@@ -114,7 +146,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Client Add Error Received: " + Err.Description)
+            MsgBox ("Client Add Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
@@ -237,7 +269,7 @@ Me![c_cb_name_select].Requery ' Refresh
 
 
 Me.client_add_text_first.SetFocus
-msgbox "New Client Record Successfully Created"
+MsgBox "New Client Record Successfully Created"
 
 
 End If
@@ -248,9 +280,9 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
-            msgbox ("Please fill in required fields")
+            MsgBox ("Please fill in required fields")
         Case Else ' All other cases
-            msgbox ("Client_error Received: " + Err.Description)
+            MsgBox ("Client_error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -271,13 +303,13 @@ Private Sub Delete_Client()
         query = string_helpers.assemble_query(DeleteQuery, Nothing, Array("clients"), "WHERE ID = " & client_id)
         Call helpers.exec_query(query, Application.CurrentDb)
     Else
-        msgbox ("Not a valid client, please select a client from the combobox list")
+        MsgBox ("Not a valid client, please select a client from the combobox list")
         Exit Sub
     End If
     
     Call reset_form ' Reset the form
     Me![c_cb_name_select].Requery ' Refresh
-    msgbox "Client Record Successfully Deleted"
+    MsgBox "Client Record Successfully Deleted"
     
 ExitHandler:
     Exit Sub
@@ -286,7 +318,7 @@ ErrorHandler:
         Case 20 ' Silently exit
             ' Exit silent
         Case Else ' All other cases
-            msgbox ("Delete Client Error: " + Err.Description)
+            MsgBox ("Delete Client Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -307,3 +339,23 @@ Private Sub Delete_Click()
     Call Delete_Client
     
 End Sub
+
+
+Private Sub ToggleActive(ByVal onoff As Integer)
+    If onoff = True Then ' Value must be 1
+        Me.c_active_toggle.BackColor = ToggleGreen
+    ElseIf onoff = False Then ' Value must be 0
+        Me.c_active_toggle.BackColor = ToggleRed
+    Else ' Any other 'positive' integer
+        Me.c_active_toggle.BackColor = RGB(191, 191, 191) ' Grey
+
+    End If
+End Sub
+
+Private Function GetToggleVal() As Boolean
+      If Me.c_active_toggle.BackColor = ToggleGreen Then ' Value must be 1
+        GetToggleVal = True
+    ElseIf Me.c_active_toggle.BackColor = ToggleRed Then ' Value must be 0
+        GetToggleVal = False
+    End If
+End Function

@@ -47,7 +47,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Error Received: " + Err.Description)
+            MsgBox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -89,14 +89,14 @@ Private Sub submit_ihss()
     If IsNull(ihss_cb_emp_select.Value) = False Then
         emp_id = ihss_cb_emp_select.Column(0)
     Else
-        msgbox ("Please select an employee before continuing")
+        MsgBox ("Please select an employee before continuing")
         Exit Sub
     End If
     
     If IsNull(ihss_cb_client_select.Value) = False Then
         client_id = ihss_cb_client_select.Column(0)
     Else
-        msgbox ("Please select an employee before continuing")
+        MsgBox ("Please select an employee before continuing")
         Exit Sub
     End If
     
@@ -109,7 +109,7 @@ Private Sub submit_ihss()
         
        
     Else
-        msgbox ("You have not selected whether this employee is IHSS eligible with this client.")
+        MsgBox ("You have not selected whether this employee is IHSS eligible with this client.")
         Exit Sub
     End If
     
@@ -125,11 +125,11 @@ Private Sub submit_ihss()
         query = string_helpers.assemble_query(updateQuery, Array("ihss_eligible = " & eligible), Array("ihss_eligibility"), "WHERE ID = " & rst("ID"))
         Call helpers.exec_query(query, Application.CurrentDb)
         
-         msgbox ("Successfully updated the pre-existing IHSS eligibility record")
+         MsgBox ("Successfully updated the pre-existing IHSS eligibility record")
         
     Else
         Dim answer As VbMsgBoxResult
-        answer = msgbox("A Pre-existing IHSS Eligiblity record was not found, would you like to create one?", vbQuestion + vbYesNo)
+        answer = MsgBox("A Pre-existing IHSS Eligiblity record was not found, would you like to create one?", vbQuestion + vbYesNo)
         If answer = vbYes Then ' Then go ahead and create the record 5/1/2014
             Dim insertAttrs As Variant: insertAttrs = Array("" & emp_id, "" & client_id, "" & eligible)
             Dim insertVals As String: insertVals = string_helpers.join_array_to_str(insertAttrs, ",")
@@ -138,7 +138,7 @@ Private Sub submit_ihss()
             
            Call helpers.exec_query(query, Application.CurrentDb)
            ' msgbox (query)
-           msgbox ("Successfully created a new IHSS eligibility record")
+           MsgBox ("Successfully created a new IHSS eligibility record")
             
             
             
@@ -157,9 +157,12 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             'Handle silently
         Case Else ' All other cases
-            msgbox ("Submit_ihss Error: " + Err.Description)
+            MsgBox ("Submit_ihss Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
 End Sub
+
+
+
 

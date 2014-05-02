@@ -9,17 +9,48 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Compare Database
 Option Explicit ' Enforce strict variable 'typing'
+
+Private Sub Activate_Click()
+    On Error GoTo ErrorHandler
+    
+    If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = False Then
+        'Dim yes_no As Boolean
+        Dim active As Boolean: active = Not (GetToggleVal()) ' Flip it
+        Dim emp_id As Integer: emp_id = Me.e_cb_name_select.Column(0)
+        Dim intCount As Integer: intCount = CLng(Nz(DLookup("ID", "employees", "ID = " & emp_id), 0))
+        Dim query As String: query = "update employees set active = " & active
+        query = query + " where ID = " & emp_id
+        Call helpers.exec_query(query, Application.CurrentDb)
+        Call ToggleActive(active)
+    Else
+        MsgBox ("Please select a valid employee to activate")
+    End If
+    
+    
+    
+ExitHandler:
+    Exit Sub
+ErrorHandler:
+    Select Case Err
+        Case 20 ' Without Error exit; our custom error handling
+            
+        Case Else ' All other cases
+            MsgBox ("Employee Activate Error: " + Err.Description)
+            Resume ExitHandler ' Invoke Exit Handler
+    End Select
+End Sub
+
 Private Sub Blackout_Click()
 On Error GoTo ErrorHandler
     
     If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = False Then
         Dim emp_id As Long: emp_id = Me.e_cb_name_select.Column(0) ' Get the idea to get the first and last name
         Dim emp_name As String: emp_name = Me.e_cb_name_select.Column(1) ' Get the employee full name
-       DoCmd.Close acForm, "employee_blackout" ' Reload it, for now
-       DoCmd.OpenForm "employee_blackout", , , , , , "empb_name_text|" & emp_name & "|empb_box_id|" & emp_id
+        DoCmd.Close acForm, "employee_blackout" ' Reload it, for now
+        DoCmd.OpenForm "employee_blackout", , , , , , "empb_name_text|" & emp_name & "|empb_box_id|" & emp_id
        
     Else
-        msgbox ("Please select a valid employee before attempting to go to the employee black out form")
+        MsgBox ("Please select a valid employee before attempting to go to the employee black out form")
     End If
     
 ExitHandler:
@@ -29,7 +60,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             
         Case Else ' All other cases
-            msgbox ("Employee Blackout Error" + Err.Description)
+            MsgBox ("Employee Blackout Error" + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -42,6 +73,8 @@ Private Sub reset_form()
 
     Call helpers.clear_form(Me)
     Call helpers.change_control_caption("Create", Me.Create_Update)
+    Call ToggleActive(2) ' Any value other than 0 or 1 will trigger total reset
+    
 End Sub
 
 
@@ -169,7 +202,7 @@ Call reset_form ' Reset the form
 Me![e_cb_name_select].Requery ' Refresh
 
 Me.emp_add_text_last.SetFocus
-msgbox "New Employee Record Successfully Created"
+MsgBox "New Employee Record Successfully Created"
 
 
 End If
@@ -180,9 +213,9 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
-            msgbox ("Please fill in required fields")
+            MsgBox ("Please fill in required fields")
         Case Else ' All other cases
-            msgbox ("Employee Add Form Error" + Err.Description)
+            MsgBox ("Employee Add Form Error" + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -203,13 +236,13 @@ Private Sub Delete_Employee()
         query = string_helpers.assemble_query(DeleteQuery, Nothing, Array("employees"), "WHERE ID = " & emp_id)
         Call helpers.exec_query(query, Application.CurrentDb)
     Else
-        msgbox ("Not a valid employee, please select an employee from the combobox")
+        MsgBox ("Not a valid employee, please select an employee from the combobox")
         Exit Sub
     End If
     
     Call reset_form ' Reset the form
     Me![e_cb_name_select].Requery ' Refresh
-    msgbox "Employee Record Successfully Deleted"
+    MsgBox "Employee Record Successfully Deleted"
     
 ExitHandler:
     Exit Sub
@@ -218,7 +251,7 @@ ErrorHandler:
         Case 20 ' Silently exit
             ' Exit silent
         Case Else ' All other cases
-            msgbox ("Delete Employee Error: " + Err.Description)
+            MsgBox ("Delete Employee Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -253,7 +286,7 @@ On Error GoTo ErrorHandler
        
     Else
         Dim answer As VbMsgBoxResult
-        answer = msgbox("Continue to the IHSS Eligibility Form without selecting an employee?", vbQuestion + vbYesNo)
+        answer = MsgBox("Continue to the IHSS Eligibility Form without selecting an employee?", vbQuestion + vbYesNo)
         If answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else
@@ -271,7 +304,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Error Received: " + Err.Description)
+            MsgBox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -294,7 +327,7 @@ Dim ignoreObjs As Object: Set ignoreObjs = CreateObject("Scripting.Dictionary")
 Call ignoreObjs.Add("e_cb_name_select", "e_cb_name_select") ' Key, Value Pair, key must always be unique.
 
 Dim attrs As Variant: attrs = Array("last_name", "first_name", "middle_initial" _
-, "regional_center", "phone", "sick_hour_rate", "payrate", "title", "comments") ' Dictates the order to fill the boxes in
+, "regional_center", "phone", "sick_hour_rate", "payrate", "title", "comments", "active") ' Dictates the order to fill the boxes in
 
 
 
@@ -309,6 +342,10 @@ If IsNull(rst) = False And helpers.populate(attrs, rst, Me, ignoreObjs) = True T
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
+Call ToggleActive(rst("active"))
+
+
+
 ' Garbage handler does most of the work, we just need to clear it out to help move it along
 
 Set rst = Nothing ' Clear it out
@@ -321,7 +358,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("e_cb_name_select Error: " + Err.Description)
+            MsgBox ("e_cb_name_select Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -331,8 +368,7 @@ On Error GoTo ErrorHandler
 
 
 If (Me.e_cb_name_select) And Me.e_cb_name_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
-    Call helpers.clear_form(Me)
-    Call helpers.change_control_caption("Create", Me.Create_Update) ' Reset
+    Call reset_form
     Resume ExitHandler ' Silently exit
 End If
 
@@ -343,7 +379,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Error Received: " + Err.Description)
+            MsgBox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
@@ -351,6 +387,25 @@ ErrorHandler:
 
 
 End Sub
+
+Private Sub ToggleActive(ByVal onoff As Integer)
+    If onoff = True Then ' Value must be 1
+        Me.e_active_toggle.BackColor = ToggleGreen
+    ElseIf onoff = False Then ' Value must be 0
+        Me.e_active_toggle.BackColor = ToggleRed
+    Else ' Any other 'positive' integer
+        Me.e_active_toggle.BackColor = RGB(191, 191, 191) ' Grey
+
+    End If
+End Sub
+
+Private Function GetToggleVal() As Boolean
+      If Me.e_active_toggle.BackColor = ToggleGreen Then ' Value must be 1
+        GetToggleVal = True
+    ElseIf Me.e_active_toggle.BackColor = ToggleRed Then ' Value must be 0
+        GetToggleVal = False
+    End If
+End Function
 
 
 

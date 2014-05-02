@@ -44,7 +44,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Error On Employee Blackout Load Form: " + Err.Description)
+            MsgBox ("Error On Employee Blackout Load Form: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -56,7 +56,7 @@ Private Sub Form_Load()
     Dim name As String
     
     If IsNull(Me.OpenArgs) = True Then ' Then throw an error, we should not be coming in here with zero args
-        msgbox ("Please open the employee add form to select an existing employee to perform a blackout")
+        MsgBox ("Please open the employee add form to select an existing employee to perform a blackout")
         DoCmd.Close acForm, "employee_blackout" ' Close the form
         Exit Sub ' Trigger case 20
     End If
@@ -69,7 +69,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Error On Employee Blackout Load Form: " + Err.Description)
+            MsgBox ("Error On Employee Blackout Load Form: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -102,19 +102,19 @@ Private Sub Submit_Post()
     If IsNull(Me.empb_start_date_calendar) = False Then
         start_date = Me.empb_start_date_calendar
     Else
-        msgbox ("Please select a start date")
+        MsgBox ("Please select a start date")
         Exit Sub
     End If
      
     If IsNull(Me.empb_end_date_calendar) = False Then
         end_date = Me.empb_end_date_calendar
     Else
-        msgbox ("Please select an end date")
+        MsgBox ("Please select an end date")
         Exit Sub
     End If
     
     If helpers.valid_dates(start_date, end_date) = False Then
-        msgbox ("End date is greater than start date, please select proper dates.")
+        MsgBox ("End date is greater than start date, please select proper dates.")
         Exit Sub
     End If
     
@@ -128,7 +128,7 @@ Private Sub Submit_Post()
     
     Call helpers.exec_query(query, Application.CurrentDb)
     
-    msgbox ("Successfully posted blackout dates for " & first_name & ", " & last_name & "")
+    MsgBox ("Successfully posted blackout dates for " & first_name & ", " & last_name & "")
 ExitHandler:
     Exit Sub
 ErrorHandler:
@@ -136,7 +136,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Error On Employee Blackout Post: " + Err.Description)
+            MsgBox ("Error On Employee Blackout Post: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub

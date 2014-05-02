@@ -91,7 +91,7 @@ Me.house_add_text_zip.Value = ""
 Me.house_add_text_name.Value = ""
 
 Me.house_add_text_name.SetFocus
-msgbox "New House Record Successfully Created"
+MsgBox "New House Record Successfully Created"
 
 
 End If
@@ -102,9 +102,9 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
-            msgbox ("Please fill in required fields")
+            MsgBox ("Please fill in required fields")
         Case Else ' All other cases
-            msgbox ("Error Received: " + Err.Description)
+            MsgBox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
     
@@ -149,7 +149,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Client House Select Error: " + Err.Description)
+            MsgBox ("Client House Select Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -169,7 +169,7 @@ ErrorHandler:
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
         Case Else ' All other cases
-            msgbox ("Client House Select Error: " + Err.Description)
+            MsgBox ("Client House Select Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
