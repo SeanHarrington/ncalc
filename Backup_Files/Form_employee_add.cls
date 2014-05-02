@@ -391,8 +391,12 @@ End Sub
 Private Sub ToggleActive(ByVal onoff As Integer)
     If onoff = True Then ' Value must be 1
         Me.e_active_toggle.BackColor = ToggleGreen
+        Call helpers.change_control_caption("De-activate", Me.Activate)
+        
     ElseIf onoff = False Then ' Value must be 0
         Me.e_active_toggle.BackColor = ToggleRed
+        Call helpers.change_control_caption("Activate", Me.Activate)
+          
     Else ' Any other 'positive' integer
         Me.e_active_toggle.BackColor = RGB(191, 191, 191) ' Grey
 

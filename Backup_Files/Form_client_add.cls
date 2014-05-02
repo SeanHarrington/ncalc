@@ -102,7 +102,7 @@ Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "mi
 Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("clients"), "WHERE ID = " & client_id)
 Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
-Dim ignObjs As Scripting.dictionary: Set ignObjs = CreateObject("Scripting.Dictionary")
+Dim ignObjs As Scripting.Dictionary: Set ignObjs = CreateObject("Scripting.Dictionary")
 
 Call ignObjs.Add("c_cb_name_select", "c_cb_name_select")
 
@@ -344,8 +344,10 @@ End Sub
 Private Sub ToggleActive(ByVal onoff As Integer)
     If onoff = True Then ' Value must be 1
         Me.c_active_toggle.BackColor = ToggleGreen
+         Call helpers.change_control_caption("De-activate", Me.Activate)
     ElseIf onoff = False Then ' Value must be 0
         Me.c_active_toggle.BackColor = ToggleRed
+         Call helpers.change_control_caption("Activate", Me.Activate)
     Else ' Any other 'positive' integer
         Me.c_active_toggle.BackColor = RGB(191, 191, 191) ' Grey
 
