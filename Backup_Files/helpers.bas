@@ -2,9 +2,10 @@ Attribute VB_Name = "helpers"
 Option Compare Database
 Option Explicit ' Explicit 'typing' for variables
 
-Public Function fill_fields_4_textboxes(ByRef fieldKeys As Variant, ByRef recordSet As DAO.recordSet, ByRef myForm As Form) _
+
+Public Function fill_fields_4_textboxes(ByRef fieldKeys As Variant, ByRef recordSet As DAO.recordSet, ByRef myform As Form) _
 As Boolean ' fieldKeys is an array, recordSet for a select query, myForm is a form
-On Error GoTo ErrorHandler ' Error handling
+On Error GoTo Errorhandler ' Error handling
 On Error Resume Next ' Error handling, for the For Each loop Added by - James A. 4/16/2014
 
  ' This function still needs tweaking for error checking in case we run into the situation where the number of textboxes is greater than the number of fieldKey array values
@@ -14,7 +15,7 @@ Dim index As Integer: index = 0 ' Index for recordSet.Fields(index) iteration
 Dim indexMax As Integer: indexMax = UBound(fieldKeys) ' Upper bounds index for the fieldKeys array variable
 
 
-For Each vntControl In myForm.Controls ' Grab myForm's controls
+For Each vntControl In myform.Controls ' Grab myForm's controls
     If vntControl.ControlType = acTextBox And index <= indexMax Then ' If the variant control type is equal to an access TextBox
         vntControl.Value = recordSet.Fields(fieldKeys(index)) ' Then search the key in the recordSet.Fields object
         index = index + 1 ' Increment index by 1
@@ -22,9 +23,6 @@ For Each vntControl In myForm.Controls ' Grab myForm's controls
    
 Next vntControl ' This still needs to exit when we've reached the indexMax but it is buggy if we try to use 'Exit For' as we get an error...
 
-'Form.emp_add_text_last.Value = rst.Fields("last_name")
-'Form.emp_add_text_middle.Value = rst.Fields("middle_initial")
-'Form.emp_add_text_first.Value = rst.Fields("first_name")
 fill_fields_4_textboxes = True ' Successfully filled the textboxes
 
 
@@ -32,10 +30,10 @@ fill_fields_4_textboxes = True ' Successfully filled the textboxes
 ' Now exit
 ExitHandler:
     Exit Function
-ErrorHandler:
+Errorhandler:
     Select Case Err
         Case Else ' All other cases
-            msgbox ("Error Received: " + Err.Description)
+            MsgBox ("Error Received: " + Err.Description)
             fill_fields_4_textboxes = False ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select
@@ -43,9 +41,9 @@ ErrorHandler:
 End Function
 
 Public Function populate(ByRef fieldKeys As Variant, ByRef recordSet As DAO.recordSet, _
-ByRef myForm As Form, Optional ByRef ignDict As Scripting.dictionary = Nothing) As Boolean ' fieldKeys is an array, recordSet for a select query, myForm is a form
+ByRef myform As Form, Optional ByRef ignDict As Scripting.Dictionary = Nothing) As Boolean ' fieldKeys is an array, recordSet for a select query, myForm is a form
 
-On Error GoTo ErrorHandler ' Error handling
+On Error GoTo Errorhandler ' Error handling
 On Error Resume Next ' Error handling, for the For Each loop Added by - James A. 4/16/2014
 
  ' This function still needs tweaking for error checking in case we run into the situation where the number of textboxes is greater than the number of fieldKey array values
@@ -55,7 +53,7 @@ Dim index As Integer: index = 0 ' Index for recordSet.Fields(index) iteration
 Dim indexMax As Integer: indexMax = UBound(fieldKeys) ' Upper bounds index for the fieldKeys array variable
 Dim ignored As Boolean: ignored = False ' By default, in case ignDict is null
 
-For Each vntControl In myForm.Controls ' Grab myForm's controls
+For Each vntControl In myform.Controls ' Grab myForm's controls
     
     If vntControl.ControlType = acTextBox And index <= indexMax Then ' If the variant control type is equal to an access TextBox
           
@@ -98,17 +96,17 @@ populate = True ' Successfully filled the textboxes
 ' Now exit
 ExitHandler:
     Exit Function
-ErrorHandler:
+Errorhandler:
     Select Case Err
         Case Else ' All other cases
-            msgbox ("Populate Error: " + Err.Description)
+            MsgBox ("Populate Error: " + Err.Description)
             populate = False ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
 End Function
-Private Function sender_is_dkey(ByVal sender As String, ByRef dict As Scripting.dictionary) As Boolean
-    On Error GoTo ErrorHandler
+Private Function sender_is_dkey(ByVal sender As String, ByRef dict As Scripting.Dictionary) As Boolean
+    On Error GoTo Errorhandler
     
     
         If Not (dict Is Nothing) And CStr(dict(sender)) = sender Then
@@ -120,13 +118,13 @@ Private Function sender_is_dkey(ByVal sender As String, ByRef dict As Scripting.
 'Now exit
 ExitHandler:
     Exit Function
-ErrorHandler:
-        msgbox ("Sender_is_dkey Error: " + Err.Description)
+Errorhandler:
+        MsgBox ("Sender_is_dkey Error: " + Err.Description)
         sender_is_dkey = True ' Error received
         Resume ExitHandler ' Invoke Exit Handler
 End Function
 Private Function contains_key(ByVal key As Variant, ByRef hash As Collection) As Boolean
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     Dim obj As Variant
     
     obj = hash(key)
@@ -135,14 +133,14 @@ Private Function contains_key(ByVal key As Variant, ByRef hash As Collection) As
 'Now exit
 ExitHandler:
     Exit Function
-ErrorHandler:
+Errorhandler:
         contains_key = True ' Error received
         Resume ExitHandler ' Invoke Exit Handler
 End Function
 
 
 Public Function get_record(ByRef query As String, ByRef curr_db As DAO.Database) As DAO.recordSet ' Return recordset
-    On Error GoTo ErrorHandler ' Error handling
+    On Error GoTo Errorhandler ' Error handling
     
     
     Set get_record = curr_db.OpenRecordset(query) ' Return record set
@@ -150,34 +148,34 @@ Public Function get_record(ByRef query As String, ByRef curr_db As DAO.Database)
     
 ExitHandler:
     Exit Function
-ErrorHandler:
+Errorhandler:
     Select Case Err
         Case Else ' All Error cases not accounted for
-            msgbox ("Error Received: " + Err.Description)
+            MsgBox ("Error Received: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Function
 
 Public Sub change_control_caption(ByVal newCaption As String, ByRef ctlVariant As Variant) ' Support for any control but dangerous
-    On Error GoTo ErrorHandler ' Error handling
+    On Error GoTo Errorhandler ' Error handling
     ctlVariant.Caption = newCaption
     
 ExitHandler:
     Exit Sub
-ErrorHandler:
+Errorhandler:
     Select Case Err
         Case Else ' All Error cases not accounted for
-            msgbox ("change_control_caption Error: " + Err.Description)
+            MsgBox ("change_control_caption Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
 
 
-Public Sub clear_form(ByRef myForm As Form)
+Public Sub clear_form(ByRef myform As Form)
     On Error Resume Next ' Error handling, in case control doesn't have an error property
 
     Dim vntControl As Variant ' vntControl can be any type of control
-    For Each vntControl In myForm.Controls
+    For Each vntControl In myform.Controls
         vntControl.Value = Null
     Next vntControl
 
@@ -185,16 +183,16 @@ End Sub
 
 'exec_query serves as an abstraction or a 'wrapper' to allow for better error handling
 Public Sub exec_query(ByRef query As String, ByRef curr_db As DAO.Database)
-    On Error GoTo ErrorHandler
+    On Error GoTo Errorhandler
     
     curr_db.Execute query, dbFailOnError
     
 ExitHandler:
     Exit Sub
-ErrorHandler:
+Errorhandler:
     Select Case Err
         Case Else ' All Error cases not accounted for
-            msgbox ("Execute Query Error: " + Err.Description)
+            MsgBox ("Execute Query Error: " + Err.Description)
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 End Sub
@@ -211,3 +209,43 @@ Public Function valid_dates(ByRef start_date As Date, ByRef end_date As Date) As
 End Function
 
 
+Public Sub set_rowsource(ByRef newsource As String, ByRef ctrl As Variant)
+On Error GoTo Errorhandler
+    ctrl.RowSource = newsource
+    
+ExitHandler:
+    Exit Sub
+    
+Errorhandler:
+    Select Case Err
+    Case Else
+        MsgBox ("Set Rowsource Error: " + Err.Description)
+        Resume ExitHandler
+End Sub
+
+Public Sub clear_cb_items(ByRef myform As Form, ByVal ctrl As String)
+On Error GoTo Errorhandler
+    Dim i As Integer
+    
+    If IsNull(myform) = True Then
+        Exit Sub
+    ElseIf IsNull(myform(ctrl)) = True Then
+        Exit Sub
+    End If
+    
+    For i = 1 To myform(ctrl).ListCount
+        myform(ctrl).RemoveItem 0 ' Pop the top item
+    Next i
+    
+ExitHandler:
+    Exit Sub
+    
+Errorhandler:
+    Select Case Err
+    Case Else
+        MsgBox ("Set Clear CB Items Error: " + Err.Description)
+        Resume ExitHandler
+    End Select
+    
+
+End Sub
