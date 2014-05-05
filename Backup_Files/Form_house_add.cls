@@ -23,7 +23,7 @@ Private Sub Create_Update_Click()
 End Sub
 
 Private Sub submit_house()
-On Error GoTo Errorhandler ' Error handling
+On Error GoTo ErrorHandler ' Error handling
 
     Dim house_id As Integer
     Dim comment As String
@@ -50,26 +50,46 @@ On Error GoTo Errorhandler ' Error handling
         Set lookupAttrs = Nothing ' Clear it out
     Else ' Submit/Create new house
         Dim answer As VbMsgBoxResult: answer = vbYes ' By Default, yes
+        Dim client_id As Integer
+        Dim rst As DAO.recordSet
+        
+        If IsNull(Me.ha_cb_unassignedc_select) = False Then
+            client_id = Me.ha_cb_unassignedc_select.Column(0)
+        Else
+            MsgBox ("Please select an unassigned client to start a new house")
+            Exit Sub
+        End If
+        
+        
         If IsNull(Me.ha_add_text_comment) = True Then
             answer = MsgBox("Go ahead and create a house with no comment?", vbQuestion + vbYesNo)
         End If
+        
         If answer = vbNo Then
             Exit Sub
         End If ' Otherwise continue
         
-        fillColTab = "INSERT INTO houses (comments) VALUES ('" & comment & "');"
+        fillColTab = "INSERT INTO houses (comments) VALUES ('" & comment & "');" ' Create the new house
         
-        Call helpers.exec_query(fillColTab, Application.CurrentDb)
+        Call helpers.exec_query(fillColTab, Application.CurrentDb) ' Execute
+        'house_id = @@identity
+        Set rst = helpers.get_record("SELECT @@Identity;", Application.CurrentDb)
+        house_id = CLng(rst.Fields(0)) ' Get the last inserted row's ID
+        fillColTab = "UPDATE [clients] SET [house_id] = " & house_id & " WHERE [ID] = " & client_id
 
-        Call reset_form
+        Call helpers.exec_query(fillColTab, Application.CurrentDb) ' Connect the client to the new house
+        
         Call update_houses_list
+        Call update_assigned_list
+        Call update_unassigned_list
+        'Call reset_form
         MsgBox "New House Record Successfully Created"
     End If
 
 
 ExitHandler:
     Exit Sub
-Errorhandler:
+ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
             
@@ -80,18 +100,8 @@ Errorhandler:
     
 End Sub
 
-
-Private Sub ha_cb_select_BeforeUpdate(Cancel As Integer) ' Renamed, see other sub procedure below
-
-
-End Sub
-
-Private Sub ha_cb_select_Change() ' Renamed, see other sub procedure below
-
-End Sub
-
 Private Sub Disband_House_Click()
-On Error GoTo Errorhandler ' Error handling
+On Error GoTo ErrorHandler ' Error handling
     Dim house_id As Long
     Dim intCount As Long
     
@@ -118,8 +128,8 @@ On Error GoTo Errorhandler ' Error handling
         MsgBox ("House #" & house_id & " successfully disbanded!")
         
         Call update_houses_list
-        Me![ha_cb_assignedc_select].Requery
-        Me![ha_cb_unassignedc_select].Requery
+        Call update_assigned_list
+        Call update_unassigned_list
         Call reset_form ' Just reset the whole thing
        
         
@@ -127,7 +137,7 @@ On Error GoTo Errorhandler ' Error handling
     
 ExitHandler:
     Exit Sub
-Errorhandler:
+ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
@@ -142,42 +152,51 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub Form_Open(Cancel As Integer)
+    Call update_unassigned ' Set the unassigned rowsource
     Call update_houses_list ' Update the houses list
+    Call update_unassigned_list ' Update both the unassigned clients list
+End Sub
+Private Sub update_unassigned_list()
+     Me![ha_cb_unassignedc_select].Requery ' Update unassigned
+End Sub
+
+Private Sub update_assigned_list()
+    Me![ha_cb_assignedc_select].Requery
 End Sub
 
 Private Sub update_houses_list()
 Dim prepString As String
-Dim oldIndex As Integer: oldIndex = 0
+Dim valIsNull As Boolean: valIsNull = True ' By default this value is null
 Dim rs1 As recordSet
 Set rs1 = CurrentDb.OpenRecordset("SELECT ID FROM houses;") ' get all the houses '
+
 If IsNull(Me.ha_cb_house_select.Value) = False Then ' Store the old value index
-    oldIndex = Me.ha_cb_house_select.ListIndex ' Store it
+    valIsNull = False ' Not Null
 End If
 
-rs1.MoveFirst
 Call helpers.clear_cb_items(Me, "ha_cb_house_select") ' Clear/reset it
 
+
+rs1.MoveFirst
+
+
 Do While Not rs1.EOF
+
     Dim rs2 As recordSet
     prepString = "" ' reset stringbuilder '
     Set rs2 = CurrentDb.OpenRecordset("SELECT first_name FROM clients WHERE house_id = " & rs1![ID] & ";") ' get the clients with this house # '
     If rs2.RecordCount > 0 Then ' if there are any clients then proceed '
     
-    Do While Not rs2.EOF
-        prepString = prepString + rs2![first_name] + " " ' build the string '
-    
-    
-        rs2.MoveNext
-    Loop
+        Do While Not rs2.EOF
+            prepString = prepString + rs2![first_name] + " " ' build the string '
+            rs2.MoveNext
+        Loop
+        
     
     Dim strItem As String
     strItem = rs1![ID] & ";" & prepString
     Me.ha_cb_house_select.AddItem Item:=strItem ' Populate the list
      
-    
-    
-    
-    
     
     ' Column(0) = rs1![ID] ' set cb[0] to ID '
     ' Me.ha_cb_house_select.Column(1) = prepString ' set cb[1] to built string '
@@ -186,20 +205,24 @@ Do While Not rs1.EOF
    
    rs1.MoveNext
 Loop
-Me.ha_cb_house_select.Value = ""
-Me.ha_cb_house_select.SetFocus
-Me.ha_cb_house_select.Value = Me.ha_cb_house_select.Selected(oldIndex)  ' Set back to stored index
 
+
+
+If valIsNull = False Then
+   Me.ha_cb_house_select.Value = Me.ha_cb_house_select.OldValue ' Better way of retrieving the oldvalue via Microsoft Access
+End If
+
+Me.ha_cb_house_select.SetFocus ' This lets us add a visual emphasis on the combo box list
 
 
 
 End Sub
 
 Private Sub ha_cb_house_select_BeforeUpdate(Cancel As Integer)
-On Error GoTo Errorhandler ' Error handling
+On Error GoTo ErrorHandler ' Error handling
 
 
-If IsNull(Me.ha_cb_house_select) = False And IsNull(Me.ha_cb_house_select.Column(0)) = True Then ' Invalid primary key
+If Me.ha_cb_house_select And IsNull(Me.ha_cb_house_select.Column(0)) = True Then ' Invalid primary key
     Resume ExitHandler ' Silently exit and let MS Access give us a dialog error and the dropdown list
 End If
 
@@ -221,15 +244,17 @@ If helpers.populate(textboxAttrs, rst, Me, ignoreObjs) = True Then ' Fill in the
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
-Call update_cbs_by(house_id) ' Update the combo boxes by this primary key in their SQL queries
- Me.ha_cb_unassignedc_select.RowSource = "SELECT clients.ID, clients.last_name, clients.first_name, clients.middle_initial FROM clients WHERE clients.house_id = 0"
+Call update_assigned_by(house_id) ' Update the combo boxes by this primary key in their SQL queries
+Call update_unassigned_list ' Update the unassigned list
+
+
 Set rst = Nothing ' Clear it out
 Set textboxAttrs = Nothing ' Clear it out
 
 
 ExitHandler:
     Exit Sub
-Errorhandler:
+ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
@@ -240,16 +265,17 @@ Errorhandler:
 End Sub
 
 Private Sub ha_cb_house_select_Change()
-On Error GoTo Errorhandler ' Error handling
-If (Me.ha_cb_house_select) And Me.ha_cb_house_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
+On Error GoTo ErrorHandler ' Error handling
+If Me.ha_cb_house_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
     Call helpers.clear_form(Me)
+    Call helpers.set_rowsource("", Me, "ha_cb_assignedc_select")
+    Call update_assigned_list
     Call helpers.change_control_caption("Post", Me.Create_Update) ' Reset
-    Resume ExitHandler ' Silently exit
 End If
 
 ExitHandler:
     Exit Sub
-Errorhandler:
+ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
@@ -259,12 +285,21 @@ Errorhandler:
     End Select
 End Sub
 
-Private Sub update_cbs_by(ByVal pkey As Integer)
-    Me.ha_cb_assignedc_select.RowSource = "SELECT clients.ID, clients.last_name, clients.first_name, clients.middle_initial FROM clients where clients.house_id = " & pkey & ";"
+
+Private Sub update_assigned_by(ByVal pkey As Integer)
+    Dim query As String: query = "SELECT clients.ID, clients.last_name + ', ' + clients.first_name + ' ' +  clients.middle_initial FROM clients where clients.house_id = " & pkey & ";"
+    Call helpers.set_rowsource(query, Me, "ha_cb_assignedc_select")
 End Sub
 
+Private Sub update_unassigned()
+    Dim row_query As String: row_query = "SELECT clients.ID, clients.last_name + ', ' + clients.first_name + ' ' + clients.middle_initial FROM clients WHERE clients.house_id = 0"
+    Call helpers.set_rowsource(row_query, Me, "ha_cb_unassignedc_select")
+
+End Sub
+
+
 Private Sub Remove_From_House_Click()
-    On Error GoTo Errorhandler ' Error handling
+    On Error GoTo ErrorHandler ' Error handling
     Dim house_id As Integer
     Dim intCount As Long
     Dim client_id As Integer
@@ -292,14 +327,14 @@ Private Sub Remove_From_House_Click()
         
         MsgBox (" " & Me.ha_cb_assignedc_select.Column(1) & " successfully removed from house #" & house_id) ' Confirmation message
         Call update_houses_list ' Update houses list
-        Me![ha_cb_unassignedc_select].Requery ' Update the unassigned combo box list
-        Me![ha_cb_assignedc_select].Requery ' Update the assigned combo box list, I think this might be unnecessary and it does it automatically when something is added...
+        Call update_assigned_list
+        Call update_unassigned_list
         
     End If
     
 ExitHandler:
     Exit Sub
-Errorhandler:
+ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error
@@ -310,7 +345,7 @@ Errorhandler:
 End Sub
 
 Private Sub Assign_To_House_Click()
-    On Error GoTo Errorhandler ' Error handling
+    On Error GoTo ErrorHandler ' Error handling
     Dim intCount As Long
     Dim house_id As Integer
     Dim client_id As Integer
@@ -342,7 +377,7 @@ Private Sub Assign_To_House_Click()
     
 ExitHandler:
     Exit Sub
-Errorhandler:
+ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
             ' Silently catch an exit without an error

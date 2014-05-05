@@ -259,9 +259,6 @@ End Sub
 
 
 
-Private Sub Command63_Click()
-
-End Sub
 
 Private Sub Create_Update_Click()
   
@@ -367,7 +364,7 @@ Private Sub e_cb_name_select_Change()
 On Error GoTo ErrorHandler
 
 
-If (Me.e_cb_name_select) And Me.e_cb_name_select.ListIndex = -1 Then ' List is empty, so clear the rest of the form
+If Me.e_cb_name_select.ListIndex = -1 Then  ' List is empty, so clear the rest of the form
     Call reset_form
     Resume ExitHandler ' Silently exit
 End If
