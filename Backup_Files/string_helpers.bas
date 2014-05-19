@@ -117,11 +117,25 @@ ExitHandler:
 ErrorHandler:
     Select Case Err
         Case Else ' All other cases
-            msgbox ("join_array_to_str Error: " + Err.Description)
+            MsgBox ("join_array_to_str Error: " + Err.Description)
             join_array_to_str = "" ' Error received
             Resume ExitHandler ' Invoke Exit Handler
     End Select
 
+End Function
+
+Public Function escapeSQL(ByVal sql_str As String) As String
+    On Error GoTo ErrorHandler
+    
+    escapeSQL = """ + sql_str + """
+    
+ExitHandler:
+    Exit Function
+ErrorHandler:
+    Select Case Err
+        Case Else
+        MsgBox ("escapeSQL Error: " + Err.Description)
+        Resume ExitHandler
 End Function
 
 

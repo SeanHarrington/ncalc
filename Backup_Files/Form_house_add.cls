@@ -297,6 +297,18 @@ Private Sub update_unassigned()
 
 End Sub
 
+Private Sub Meeting_Create_Click()
+   
+    If IsNull(Me.ha_cb_house_select.Column(0)) = False Then
+        
+        Dim house_id As Long: house_id = Me.ha_cb_house_select.Column(0) ' Get the house id so we can pass it
+        DoCmd.Close acForm, "meeting_create" ' Reload it, it may already be open.  This is an expensive operation...
+        DoCmd.OpenForm "meeting_create", , , , , , "mc_cb_house_select|" & house_id ' We need to pass in our first parameter (the target) and our value seperated by '|'
+       
+    Else
+        MsgBox ("Please select a valid employee before attempting to go to the meeting create form")
+    End If
+End Sub
 
 Private Sub Remove_From_House_Click()
     On Error GoTo ErrorHandler ' Error handling

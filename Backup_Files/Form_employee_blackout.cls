@@ -9,9 +9,6 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Compare Database
 
-Private Sub Command18_Click()
-
-End Sub
 
 Private Sub Form_Activate()
     On Error GoTo ErrorHandler

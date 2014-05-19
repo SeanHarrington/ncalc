@@ -91,6 +91,7 @@ Dim sick_leave_rate As Long ' Changed to long
 Dim title As String
 Dim phone As String
 Dim regional_center As Long ' changed to long
+Dim hire_date As Date
 Dim comment As String
 Dim yes_no As Boolean: yes_no = True
 Dim fillColTab As String
@@ -153,6 +154,14 @@ Else
     comment = " " ' Optional
 End If
 
+If IsNull(Me.emp_select_date.Value) = False Then
+    
+    hire_date = Me.emp_select_date.Value
+Else
+    hire_date = Date ' Call the MS access Date function
+End If
+
+
 ' CLng(Nz(DLookup("ID", "Table1"),0))
 
     If IsNull(Me.e_cb_name_select.Value) = False Then
@@ -165,7 +174,7 @@ If intCount > 0 Then ' Update employee, since employee exists
     Dim lookupAttrs As Variant: lookupAttrs = Array("first_name = '" & first_name & "'", "last_name = '" & last_name & "'" _
     , "middle_initial = '" & middle_name & "'", "payrate = '" & pay_rate & "'", "sick_hour_rate = " & sick_leave_rate _
     , "title = '" & title & "'", "phone = '" & phone & "'", "regional_center = " & regional_center _
-    , "comments = '" & comment & "'")
+    , "comments = '" & comment & "'", "hiredate = '" & hire_date & "'")
     
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("employees"), "WHERE ID = " & emp_id)
     
@@ -180,10 +189,10 @@ Else ' Submit/Create new employee
 Dim insertAttrs As Variant: insertAttrs = Array("'" & first_name & "'", "'" & last_name _
     & "'", "'" & middle_name & "'", "" & yes_no, "" & pay_rate _
     , "" & sick_leave_rate, "'" & title & "'", "'" & phone & "'" _
-    , "" & regional_center, "'" & comment & "'")
+    , "" & regional_center, "'" & comment & "'", "'" & hire_date & "'")
     
 Dim attrs As Variant: attrs = Array("first_name", "last_name", "middle_initial", "active", "payrate", "sick_hour_rate" _
-, "title", "phone", "regional_center", "comments")
+, "title", "phone", "regional_center", "comments", "hiredate")
 
 Dim insertVals As String: insertVals = string_helpers.join_array_to_str(insertAttrs, ",")
 
@@ -225,7 +234,7 @@ Private Sub Delete_Employee()
     On Error GoTo ErrorHandler
     
     Dim emp_id As Integer
-    Dim intCount As Integer
+    Dim intCount As Long
     Dim query As String
      If IsNull(Me.e_cb_name_select.Value) = False Then
         emp_id = Me.e_cb_name_select.Column(0)
@@ -324,7 +333,7 @@ Dim ignoreObjs As Object: Set ignoreObjs = CreateObject("Scripting.Dictionary")
 Call ignoreObjs.Add("e_cb_name_select", "e_cb_name_select") ' Key, Value Pair, key must always be unique.
 
 Dim attrs As Variant: attrs = Array("last_name", "first_name", "middle_initial" _
-, "regional_center", "phone", "sick_hour_rate", "payrate", "title", "comments", "active") ' Dictates the order to fill the boxes in
+, "regional_center", "phone", "sick_hour_rate", "payrate", "title", "comments", "hiredate", "active") ' Dictates the order to fill the boxes in
 
 
 
