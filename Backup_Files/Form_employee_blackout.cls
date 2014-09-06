@@ -77,7 +77,7 @@ End Sub
 
 Private Sub Submit_Post()
      On Error GoTo ErrorHandler
-     Dim employeeID As Long
+     Dim employeeId As Long
      Dim last_name As String
      Dim first_name As String
      Dim blackout_type As String
@@ -115,8 +115,8 @@ Private Sub Submit_Post()
         Exit Sub
     End If
     
-    employeeID = empb_box_id.Value ' Do not need to convert to long, already a general number
-    Dim insertAttrs As Variant: insertAttrs = Array("" & employeeID, "'" & start_date & "'", "'" & end_date & "'", _
+    employeeId = empb_box_id.Value ' Do not need to convert to long, already a general number
+    Dim insertAttrs As Variant: insertAttrs = Array("" & employeeId, "'" & start_date & "'", "'" & end_date & "'", _
      "'" & blackout_type & "'")
     
     Dim attrs As Variant: attrs = Array("employee_id", "blackout_start", "blackout_end", "type")

@@ -52,23 +52,6 @@ ErrorHandler:
     End Select
 End Sub
 
-Private Sub Form_Load()
-
-End Sub
-
-Private Sub Form_Open(Cancel As Integer)
-
-
-End Sub
-
-Private Sub ihss_cb_client_select_Click()
-
-End Sub
-
-Private Sub ihss_cb_emp_select_Click()
-
-End Sub
-
 Private Sub ihss_chb_check_Click()
 
 End Sub
@@ -128,9 +111,9 @@ Private Sub submit_ihss()
          MsgBox ("Successfully updated the pre-existing IHSS eligibility record")
         
     Else
-        Dim answer As VbMsgBoxResult
-        answer = MsgBox("A Pre-existing IHSS Eligiblity record was not found, would you like to create one?", vbQuestion + vbYesNo)
-        If answer = vbYes Then ' Then go ahead and create the record 5/1/2014
+        Dim Answer As VbMsgBoxResult
+        Answer = MsgBox("A Pre-existing IHSS Eligiblity record was not found, would you like to create one?", vbQuestion + vbYesNo)
+        If Answer = vbYes Then ' Then go ahead and create the record 5/1/2014
             Dim insertAttrs As Variant: insertAttrs = Array("" & emp_id, "" & client_id, "" & eligible)
             Dim insertVals As String: insertVals = string_helpers.join_array_to_str(insertAttrs, ",")
             query = string_helpers.assemble_query(InsertQuery, Array("employee_id", "client_id", "ihss_eligible"), Array("ihss_eligibility"), _

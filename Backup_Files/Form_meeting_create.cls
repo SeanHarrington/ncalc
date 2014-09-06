@@ -55,7 +55,7 @@ Private Sub Submit_Meeting()
     End If
     
     If IsNull(Me.mc_title_text) = False Then
-        title = Me.mc_title_text.Value
+        title = string_helpers.fStripIllegal(Me.mc_title_text.Value)
     Else
         MsgBox ("Please enter a title for this meeting")
         Resume ExitHandler
@@ -68,10 +68,11 @@ Private Sub Submit_Meeting()
     End If
     
     If IsNull(Me.mc_add_text_comment) = False Then
-        comment = Me.mc_add_text_comment.Value
+        comment = string_helpers.fStripIllegal(Me.mc_add_text_comment.Value)
     Else
         comment = " " ' Optional
     End If
+    
     Dim attrs As Variant: attrs = Array("[house_id]", "[date]", "[start]", "[end]", "[title]", "[clients_present]", "[comments]")
     Dim insertAttrs As Variant: insertAttrs = Array("" & house_id, "'" & meeting_date & "'", "'" & start_time & "'", "'" & end_time & "'", _
     "'" & title & "'", "" & clients_present, "'" & comment & "'")
@@ -81,6 +82,59 @@ Private Sub Submit_Meeting()
 
     Call helpers.exec_query(query, Application.CurrentDb)  ' Insert
     
+    Dim meetingId As Integer
+    Dim rs2 As recordSet
+    Set rs2 = CurrentDb.OpenRecordset("SELECT ID FROM meetings;")
+  '  MsgBox ("opened record set")
+    If rs2.RecordCount > 0 Then ' if there are any clients then proceed '
+        Do While Not rs2.EOF
+            rs2.MoveLast
+'            MsgBox ("moved to last")
+            meetingId = rs2![ID]
+ '           MsgBox ("got id")
+            rs2.MoveNext
+        Loop
+    End If
+    rs2.Close
+    
+    'now we have house_id and meetingId,start_time,end_time,meeting_date,comment
+    'start_time, end_time, employee_id, house_id, shift_date, comments,ihss = no, sleep_shift = no,
+    'awake = no, exception_shift = Meeting:House
+    'shift_default
+    'SELECT DISTINCT [employees].[ID] FROM employees, shift_default WHERE [employees].[ID] = [shift_default].[employee_id];
+    Dim tempstring As String
+    
+    Dim rs1 As recordSet
+    Set rs1 = CurrentDb.OpenRecordset("SELECT DISTINCT [employees].[ID] FROM employees, shift_default WHERE [employees].[ID] = [shift_default].[employee_id] AND [shift_default].[house_id] = " & house_id & ";")
+    If rs1.RecordCount > 0 Then ' if there are any clients then proceed '
+        Do While Not rs1.EOF
+            Dim mySqlString As String
+            
+             mySqlString = "INSERT INTO shift_default(start_time, end_time, employee_id, house_id, shift_date, comments,ihss, sleep_shift,awake, exception_shift) " & _
+                               "VALUES (#" & start_time & "#,#" & end_time & "#," & CInt(rs1![ID]) & ", " & house_id & ",#" & meeting_date & "#,'" & comment & "','No','No','No','Meeting:House');"
+           ' MsgBox (mySqlString)
+            
+            CurrentDb.Execute (mySqlString)
+            CurrentDb.Execute "INSERT INTO meetings_employees (employee_id, meeting_id) VALUES (" & CInt(rs1![ID]) & "," & meetingId & ");"
+            'tempstring = tempstring & rs1![ID] & ","
+            rs1.MoveNext
+        Loop
+    End If
+    rs1.Close
+    'MsgBox (tempstring)
+    
+    
+    
+    
+   ' MsgBox (meetingId)
+    
+    'meetingId = DLookup("start_time", "meetings", "id = " & shiftNumber)
+    'we need to search the shifts table for employees associated with this house
+    ' return distinct on the employees
+    ' add each employee + meeting number to DB
+    
+    MsgBox ("Meeting Successfully Created")
+DoCmd.Close
     
 ExitHandler:
     Exit Sub
@@ -93,6 +147,7 @@ ErrorHandler:
             Resume ExitHandler ' Invoke Exit Handler
     End Select
        
+
 
 End Sub
 

@@ -9,8 +9,13 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Compare Database
 
+Private Sub Form_Load()
+MsgBox ("This form will be abandoned. It does not have the functionality that is envisioned")
+ DoCmd.Close
+End Sub
+
 Private Sub Form_Open(Cancel As Integer)
-    Call update_houses_list
+ '   Call update_houses_list
 End Sub
 
 Private Sub update_houses_list()

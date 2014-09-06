@@ -39,7 +39,7 @@ On Error GoTo ErrorHandler ' Error handling
     End If
     
     If IsNull(Me.ha_add_text_comment) = False Then
-        comment = Me.ha_add_text_comment.Value
+        comment = string_helpers.fStripIllegal(Me.ha_add_text_comment.Value)
     End If
 
     If intCount > 0 Then ' Update house
@@ -49,7 +49,7 @@ On Error GoTo ErrorHandler ' Error handling
     
         Set lookupAttrs = Nothing ' Clear it out
     Else ' Submit/Create new house
-        Dim answer As VbMsgBoxResult: answer = vbYes ' By Default, yes
+        Dim Answer As VbMsgBoxResult: Answer = vbYes ' By Default, yes
         Dim client_id As Integer
         Dim rst As DAO.recordSet
         
@@ -62,10 +62,10 @@ On Error GoTo ErrorHandler ' Error handling
         
         
         If IsNull(Me.ha_add_text_comment) = True Then
-            answer = MsgBox("Go ahead and create a house with no comment?", vbQuestion + vbYesNo)
+            Answer = MsgBox("Go ahead and create a house with no comment?", vbQuestion + vbYesNo)
         End If
         
-        If answer = vbNo Then
+        If Answer = vbNo Then
             Exit Sub
         End If ' Otherwise continue
         
@@ -147,10 +147,6 @@ ErrorHandler:
     End Select
 End Sub
 
-Private Sub Form_Load()
-
-End Sub
-
 Private Sub Form_Open(Cancel As Integer)
     Call update_unassigned ' Set the unassigned rowsource
     Call update_houses_list ' Update the houses list
@@ -230,17 +226,17 @@ Dim textboxAttrs As Variant: textboxAttrs = Array("comments") ' Dictates the ord
 Dim house_id As Integer: house_id = Me.ha_cb_house_select.Column(0) ' Retrieve the house_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("houses"), "WHERE ID = " & house_id)
 Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
-Dim ignoreObjs As Scripting.Dictionary: Set ignoreObjs = CreateObject("Scripting.Dictionary")
+Dim objs2Ignore As Scripting.Dictionary: Set objs2Ignore = CreateObject("Scripting.Dictionary")
 
 
 
-Call ignoreObjs.Add("ha_cb_assignedc_select", "ha_cb_assignedc_select") ' Ignore cb list
-Call ignoreObjs.Add("ha_cb_house_select", "ha_cb_house_select") ' Ignore cb list
-Call ignoreObjs.Add("ha_cb_unassignedc_select", "ha_cb_unassignedc_select") ' Ignore cb list
+Call objs2Ignore.Add("ha_cb_assignedc_select", "ha_cb_assignedc_select") ' Ignore cb list
+Call objs2Ignore.Add("ha_cb_house_select", "ha_cb_house_select") ' Ignore cb list
+Call objs2Ignore.Add("ha_cb_unassignedc_select", "ha_cb_unassignedc_select") ' Ignore cb list
 
 
 
-If helpers.populate(textboxAttrs, rst, Me, ignoreObjs) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+If helpers.populate(textboxAttrs, rst, Me, objs2Ignore) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 

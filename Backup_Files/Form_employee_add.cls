@@ -100,20 +100,20 @@ Dim intCount As Integer: intCount = 0 ' Initialized to zero
 
 
 If IsNull(Me.emp_add_text_first) = False Then
-    first_name = Me.emp_add_text_first.Value
+    first_name = string_helpers.fStripIllegal(Me.emp_add_text_first.Value)
 Else
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
 If IsNull(Me.emp_add_text_last) = False Then
-    last_name = Me.emp_add_text_last.Value
+    last_name = string_helpers.fStripIllegal(Me.emp_add_text_last.Value)
 Else
 
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
 If IsNull(Me.emp_add_text_middle) = False Then
-    middle_name = Me.emp_add_text_middle.Value
+    middle_name = string_helpers.fStripIllegal(Me.emp_add_text_middle.Value)
 Else
     middle_name = " " ' Set optional field to empty value
 End If
@@ -125,38 +125,38 @@ Else
 End If
 
 If IsNull(Me.emp_add_text_payrate) = False Then
-    pay_rate = Format(val(Me.emp_add_text_payrate.Value), "currency")
+    pay_rate = Format(val(string_helpers.fStripIllegal(Me.emp_add_text_payrate.Value)), "currency") ' val converts string to double
 Else
     pay_rate = Format(0#, "currency")    ' Optional
 End If
 
 If IsNull(Me.emp_add_text_sickrate) = False Then
-    sick_leave_rate = CLng(Me.emp_add_text_sickrate.Value)
+    sick_leave_rate = CLng(string_helpers.fStripIllegal(Me.emp_add_text_sickrate.Value))
 Else
     sick_leave_rate = 0 ' Optional
 End If
 
 If IsNull(Me.emp_add_text_title) = False Then
-    title = Me.emp_add_text_title.Value
+    title = string_helpers.fStripIllegal(Me.emp_add_text_title.Value)
 Else
     title = " " ' Optional
 End If
 
 If IsNull(Me.emp_add_text_phone) = False Then
-    phone = Me.emp_add_text_phone.Value
+    phone = string_helpers.fStripIllegal(Me.emp_add_text_phone.Value)
 Else
     phone = " " ' Optional
 End If
 
 If IsNull(Me.emp_add_text_comment) = False Then
-    comment = Me.emp_add_text_comment.Value
+    comment = string_helpers.fStripIllegal(Me.emp_add_text_comment.Value)
 Else
     comment = " " ' Optional
 End If
 
 If IsNull(Me.emp_select_date.Value) = False Then
     
-    hire_date = Me.emp_select_date.Value
+    hire_date = Me.emp_select_date.Value  ' string_helpers.fStripIllegal would strip the '/' character from the data
 Else
     hire_date = Date ' Call the MS access Date function
 End If
@@ -291,9 +291,9 @@ On Error GoTo ErrorHandler
        DoCmd.OpenForm "ihss_eligibility", , , , , , "ihss_cb_emp_select|" & Me.e_cb_name_select.Column(0)
        
     Else
-        Dim answer As VbMsgBoxResult
-        answer = MsgBox("Continue to the IHSS Eligibility Form without selecting an employee?", vbQuestion + vbYesNo)
-        If answer = vbYes Then
+        Dim Answer As VbMsgBoxResult
+        Answer = MsgBox("Continue to the IHSS Eligibility Form without selecting an employee?", vbQuestion + vbYesNo)
+        If Answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else
             ' Else, stay here and don't open the form
@@ -315,12 +315,6 @@ ErrorHandler:
     End Select
 End Sub
 
-Private Sub e_cb_name_select_AfterUpdate()
-    
-
-
-End Sub
-
 Private Sub e_cb_name_select_BeforeUpdate(Cancel As Integer)
 On Error GoTo ErrorHandler
 
@@ -329,8 +323,8 @@ If Me.e_cb_name_select And IsNull(Me.e_cb_name_select.Column(0)) = True Then ' I
 End If
 
 
-Dim ignoreObjs As Object: Set ignoreObjs = CreateObject("Scripting.Dictionary")
-Call ignoreObjs.Add("e_cb_name_select", "e_cb_name_select") ' Key, Value Pair, key must always be unique.
+Dim objs2Ignore As Object: Set objs2Ignore = CreateObject("Scripting.Dictionary")
+Call objs2Ignore.Add("e_cb_name_select", "e_cb_name_select") ' Key, Value Pair, key must always be unique.
 
 Dim attrs As Variant: attrs = Array("last_name", "first_name", "middle_initial" _
 , "regional_center", "phone", "sick_hour_rate", "payrate", "title", "comments", "hiredate", "active") ' Dictates the order to fill the boxes in
@@ -344,11 +338,11 @@ Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.Curren
 'Set rst = DBS.OpenRecordset("SELECT last_name, middle_initial, first_name FROM employees WHERE ID = " & employee_id) ' Explicit values to select
 'Set rst = helpers.get_record(query, Application.CurrentDb)
 
-If IsNull(rst) = False And helpers.populate(attrs, rst, Me, ignoreObjs) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+If IsNull(rst) = False And helpers.populate(attrs, rst, Me, objs2Ignore) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
-Call ToggleActive(rst("active"))
+Call ToggleActive(rst("active")) ' toggle status of employee with the record set attribute 'active'
 
 
 

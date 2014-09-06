@@ -51,9 +51,9 @@ On Error GoTo ErrorHandler
        DoCmd.OpenForm "ihss_eligibility", , , , , , "ihss_cb_client_select|" & Me.c_cb_name_select.Column(0)
        
     Else
-        Dim answer As VbMsgBoxResult
-        answer = MsgBox("Continue without selecting a client?", vbQuestion + vbYesNo)
-        If answer = vbYes Then
+        Dim Answer As VbMsgBoxResult
+        Answer = MsgBox("Continue without selecting a client?", vbQuestion + vbYesNo)
+        If Answer = vbYes Then
             DoCmd.OpenForm "ihss_eligibility" ' No options
         Else
             ' Else, stay here and don't open the form
@@ -97,27 +97,27 @@ If Me.c_cb_name_select And IsNull(Me.c_cb_name_select.Column(0)) = True Then
 End If
 
 Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial", "authorized_regional_center_id" _
-, "monthly_ihss", "regional_center", "comments", "billable_hours", "active")  ' Dictates the order in which the values will be placed into the textboxes
+, "monthly_ihss", "regional_center", "comments", "billable_hours", "monthly_ihss_min", "active")  ' Dictates the order in which the values will be placed into the textboxes
 
 Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
 Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("clients"), "WHERE ID = " & client_id)
 Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb)
-Dim ignObjs As Scripting.Dictionary: Set ignObjs = CreateObject("Scripting.Dictionary")
+Dim objs2Ignore As Scripting.Dictionary: Set objs2Ignore = CreateObject("Scripting.Dictionary")
 
-Call ignObjs.Add("c_cb_name_select", "c_cb_name_select")
+Call objs2Ignore.Add("c_cb_name_select", "c_cb_name_select")
 
 
-If helpers.populate(textboxAttrs, rst, Me, ignObjs) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+If helpers.populate(textboxAttrs, rst, Me, objs2Ignore) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
-Call ToggleActive(rst("active"))
+Call ToggleActive(rst("active")) ' Toggle the green active status based on the record set's value for the 'active' attribute
 
 Set rst = Nothing ' Clear it out
 Set textboxAttrs = Nothing ' Clear it out
 
 ExitHandler:
-    Exit Sub
+    Exit Function
 ErrorHandler:
     Select Case Err
         Case 20 ' Without Error exit; our custom error handling
@@ -128,7 +128,7 @@ ErrorHandler:
     End Select
 
 
-End Sub
+End Function
 
 Private Sub c_cb_name_select_Change()
 On Error GoTo ErrorHandler ' Error handling
@@ -164,7 +164,8 @@ Dim last_name As String
 Dim middle_name As String
 Dim regional_center As Integer
 Dim authorized_num As Long
-Dim monthly_ihss As Long
+Dim monthly_ihss_hrs As Long
+Dim monthly_ihss_mins As Long
 Dim auth_hrs As Long
 Dim comments As String
 Dim house_id As Integer: house_id = 0 ' Default
@@ -173,19 +174,19 @@ Dim intCount As Integer: intCount = 0 ' Initialize to zero
 
 
 If IsNull(Me.client_add_text_first) = False Then
-    first_name = Me.client_add_text_first.Value
+    first_name = string_helpers.fStripIllegal(Me.client_add_text_first.Value)
 Else
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
 If IsNull(Me.client_add_text_last) = False Then
-    last_name = Me.client_add_text_last.Value
+    last_name = string_helpers.fStripIllegal(Me.client_add_text_last.Value)
 Else
     Resume ExitHandler ' Invoke Exit Handler with Error Code 20
 End If
 
 If IsNull(Me.client_add_text_middle) = False Then
-    middle_name = Me.client_add_text_middle.Value
+    middle_name = string_helpers.fStripIllegal(Me.client_add_text_middle.Value)
 Else
     middle_name = " " ' Set optional field to empty value
 End If
@@ -197,26 +198,32 @@ Else
 End If
 
 If IsNull(Me.client_add_text_authn) = False Then
-    authorized_num = CLng(Me.client_add_text_authn.Value)
-
+    authorized_num = CLng(string_helpers.fStripIllegal(Me.client_add_text_authn.Value))
 Else
    authorized_num = 0
 End If
 
 If IsNull(Me.client_add_text_monthly_ihss) = False Then
-    monthly_ihss = CLng(Me.client_add_text_monthly_ihss.Value)
+    monthly_ihss_hrs = CLng(string_helpers.fStripIllegal(Me.client_add_text_monthly_ihss.Value))
 Else
-    monthly_ihss = 0
+    monthly_ihss_hrs = 0
 End If
 
+If IsNull(Me.client_add_text_monthly_ihss_min) = False Then
+    monthly_ihss_mins = CLng(string_helpers.fStripIllegal(Me.client_add_text_monthly_ihss_min.Value))
+Else
+    monthly_ihss_mins = 0
+End If
+
+
 If IsNull(Me.client_add_Text_auth_billable_hrs) = False Then
-     auth_hrs = CLng(Me.client_add_Text_auth_billable_hrs.Value)
+     auth_hrs = CLng(string_helpers.fStripIllegal(Me.client_add_Text_auth_billable_hrs.Value))
 Else
     auth_hrs = 0
 End If
 
 If IsNull(Me.client_add_text_comments) = False Then
-    comments = Me.client_add_text_comments.Value
+    comments = string_helpers.fStripIllegal(Me.client_add_text_comments.Value)
 Else
     comments = " "
 End If
@@ -232,7 +239,7 @@ End If
 If intCount > 0 Then ' Update client
     Dim lookupAttrs As Variant: lookupAttrs = Array("first_name = '" & first_name & "'", "last_name = '" & last_name & "'" _
     , "middle_initial = '" & middle_name & "'", "regional_center = " & regional_center, "authorized_regional_center_id = " & authorized_num _
-    , "monthly_ihss = " & monthly_ihss, "billable_hours = " & auth_hrs, "comments = '" & comments & "'")
+    , "monthly_ihss = " & monthly_ihss_hrs, "monthly_ihss_min = " & monthly_ihss_mins, "billable_hours = " & auth_hrs, "comments = '" & comments & "'")
     
     Dim query As String: query = string_helpers.assemble_query(updateQuery, lookupAttrs, Array("clients"), "WHERE ID = " & client_id)
 
@@ -243,10 +250,10 @@ Else
 
 Dim insertAttrs As Variant: insertAttrs = Array("'" & first_name & "'", "'" & last_name & "'" _
     , "'" & middle_name & "'", "" & authorized_num _
-    , "" & monthly_ihss, "" & regional_center, "'" & comments & "'", "" & auth_hrs)
+    , "" & monthly_ihss_hrs, "" & monthly_ihss_mins, "" & regional_center, "'" & comments & "'", "" & auth_hrs)
 
 Dim attrs As Variant: attrs = Array("first_name", "last_name", "middle_initial", "authorized_regional_center_id", "monthly_ihss" _
-, "regional_center", "comments", "billable_hours")
+, "monthly_ihss_min", "regional_center", "comments", "billable_hours")
     
 Dim insertVals As String: insertVals = string_helpers.join_array_to_str(insertAttrs, ",")
 
@@ -295,7 +302,7 @@ Private Sub Delete_Client()
     Dim intCount As Integer
     Dim query As String
      If IsNull(Me.c_cb_name_select.Value) = False Then
-        client_id = Me.c_cb_name_select.Column(0)
+        client_id = string_helpers.fStripIllegal(Me.c_cb_name_select.Column(0))
         intCount = CLng(Nz(DLookup("ID", "clients", "ID = " & client_id), 0))
     End If
     
@@ -329,9 +336,6 @@ Private Sub Create_Update_Click()
     Call Submit_Client
 End Sub
 
-Private Sub OLEUnbound32_Updated(Code As Integer)
-
-End Sub
 
 
 Private Sub Delete_Click()
@@ -350,6 +354,7 @@ Private Sub ToggleActive(ByVal onoff As Integer)
          Call helpers.change_control_caption("Activate", Me.Activate)
     Else ' Any other 'positive' integer
         Me.c_active_toggle.BackColor = RGB(191, 191, 191) ' Grey
+        
 
     End If
 End Sub
