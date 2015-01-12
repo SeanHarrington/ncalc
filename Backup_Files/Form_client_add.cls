@@ -142,7 +142,8 @@ End If
 Call ToggleActive(rst("active")) ' Toggle the green active status based on the record set's value for the 'active' attribute
 
 Set rst = Nothing ' Clear it out
-Set textboxAttrs = Nothing ' Clear it out
+Set txtBoxAttrs = Nothing ' Clear it out
+Set sqlAttrs = Nothing
 
 ExitHandler:
     Exit Sub
