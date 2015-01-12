@@ -99,11 +99,13 @@ End If
 '  Added '0' AS monthly_ihss_min to the query which we will not be derived from the database record but later transposed as a seperate value in the extracted recordset
 ' Easiest way to do it - James Alaniz 1/12/15
 
-Dim textboxAttrs As Variant: textboxAttrs = Array("last_name", "first_name", "middle_initial", "authorized_regional_center_id" _
-, "monthly_ihss", "regional_center", "comments", "billable_hours", "0 AS monthly_ihss_min", "active")  ' Dictates the order in which the values will be placed into the textboxes
+Dim sqlAttrs As Variant: sqlAttrs = Array("last_name", "first_name", "middle_initial", "authorized_regional_center_id" _
+, "monthly_ihss", "regional_center", "comments", "billable_hours", "active")  ' Dictates the order in which the values will be placed into the textboxes
+Dim txtBoxAttrs As Variant: txtBoxAttrs = Array("last_name", "first_name", "middle_initial", "authorized_regional_center_id" _
+, "monthly_ihss", "regional_center", "comments", "billable_hours", "monthly_ihss_min", "active")  ' Dict
 
 Dim client_id As Integer: client_id = Me.c_cb_name_select.Column(0) ' Retrieve the client_id
-Dim query As String: query = string_helpers.assemble_query(SelectQuery, textboxAttrs, Array("clients"), "WHERE ID = " & client_id)
+Dim query As String: query = string_helpers.assemble_query(SelectQuery, sqlAttrs, Array("clients"), "WHERE ID = " & client_id)
 Dim objs2Ignore As Scripting.dictionary: Set objs2Ignore = CreateObject("Scripting.Dictionary")
 
 Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.CurrentDb) ' Retrieve record from database
@@ -111,16 +113,13 @@ Dim rst As DAO.recordSet: Set rst = helpers.get_record(query, Application.Curren
 
 Call objs2Ignore.Add("c_cb_name_select", "c_cb_name_select") ' Ignore the object/element on the GUI by it's given name
 
-Dim IHSS_HOURS As Single
+Dim IHSS_HOURS As Double
 Dim IHSS_MINS As Single
-
+Dim IHSS_CONV As Single
 IHSS_HOURS = rst("monthly_ihss")
-
-IHSS_MINS = Math.Round((IHSS_HOURS - Int([IHSS_HOURS]) * 60))
+IHSS_CONV = IHSS_HOURS - Int([IHSS_HOURS])
+IHSS_MINS = Math.Round(IHSS_CONV * 60)
 IHSS_HOURS = Int([IHSS_HOURS])
-
-'rst("monthly_ihss") = IHSS_HOURS
-'rst("monthly_ihss_min") = IHSS_MINS
 
 Dim dictionarySet As Scripting.dictionary: Set dictionarySet = CreateObject("Scripting.Dictionary")
 Call dictionarySet.Add("last_name", rst("last_name"))
@@ -136,7 +135,7 @@ Call dictionarySet.Add("active", rst("active"))
 
 
 
-If helpers.populateWDictionary(textboxAttrs, dictionarySet, Me, objs2Ignore) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
+If helpers.populateWDictionary(txtBoxAttrs, dictionarySet, Me, objs2Ignore) = True Then ' Fill in the fields based on record set for 'Me' form and the fieldKeys array
    Call helpers.change_control_caption("Update", Me.Create_Update)
 End If
 
